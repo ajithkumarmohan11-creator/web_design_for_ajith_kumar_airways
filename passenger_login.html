@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Passenger Login- Ajith Airways</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+        .gate-card { max-width: 480px; width: 90%; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    </style>
+</head>
+<body>
+<div class="gate-card p-4">
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-primary text-uppercase"><i class="fas fa-passport me-2"></i>Passenger Login</h4>
+        <p class="text-muted small">Access your profile</p>
+    </div>
+
+    <div id="login_mobile_step_block">
+    <form onsubmit="executeFrontendOtpGenerationMatrix(event)">
+        <div class="mb-4"><label class="form-label small fw-bold text-secondary">Enter Your Mobile Number : </label>
+            <div class="input-group">
+                <span class="input-group-text bg-light"><i class="fas fa-phone-alt text-secondary"></i></span>
+                <!-- 🎯 REASON: Input box ID explicitly mapped to extract target primary keys seamlessly -->
+                <input type="text" id="raw_mobile_input_node" name="mobile_number" class="form-control font-monospace fw-bold fs-5" required placeholder="Enter 10-digit number..." maxlength="10" oninput="this.value = this.value.replace(/\D/g, '')">
+            </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Generate OTP</button>
+    </form>
+    </div> 
+    
+    <div id="login_otp_step_block" style="display: none;">
+        <div class="alert alert-light border small text-center text-dark mb-3 p-2">
+          Your 6 Digit OTP : <b class="text-danger" id="simulation_key_token">110176</b> 
+        <button type="button" class="btn btn-sm btn-outline-success fw-bold d-block mx-auto mt-2 px-3 py-1" onclick="triggerClientSideAutofillOtpEnginePipeline()">
+            <i class="fas fa-bolt me-1"></i> Auto-Fill the OTP
+        </button>
+    </div>
+    <form id="session_auth_gateway_form" onsubmit="finalizeFrontendPassengerSessionGateway(event)">
+        <input type="hidden" name="mobile_number" value="{{ mobile_number }}">
+        <input type="hidden" name="backend_otp" id="hidden_system_otp" value="{{ backend_otp }}">
+        <input type="hidden" name="is_registered" value="{{ is_registered }}">
+        
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary">Enter The 6 Digits OTP :</label>
+            <input type="text" name="user_otp" id="input_otp_box_field" class="form-control text-center fs-4 fw-bold text-primary tracking-widest" required placeholder="******" maxlength="6" autocomplete="off" oninput="monitorOtpLengthValidationStringMatches()">
+        </div>
+        <button type="submit" class="btn btn-success w-100 fw-bold py-2">Verify OTP and Sign In</button>
+    </form>
+</div> 
+<div class="text-center mt-3"><a href="index.html" class="small text-decoration-none text-muted"><i class="fas fa-arrow-left me-1"></i> Return Home Page</a></div> 
+</div>
+
+<script>
+let globalCapturedMobileKey = "";
+
+function executeFrontendOtpGenerationMatrix(event) {
+    event.preventDefault(); 
+    
+    const inputMobile = document.getElementById('raw_mobile_input_node').value.trim();
+    if(inputMobile.length !== 10) {
+        alert("Please input exact 10-digit mobile numeric parameter strings!");
+        return;
+    }
+    
+    // Cache the phone structure globally to inject inside session parameters later
+    globalCapturedMobileKey = inputMobile;
+    
+    document.getElementById('login_mobile_step_block').style.display = 'none';
+    document.getElementById('login_otp_step_block').style.display = 'block';
+}
+
+function triggerClientSideAutofillOtpEnginePipeline() {
+    const systemPresetOtpTokenValue = document.getElementById('simulation_key_token').innerText.trim();
+    const inputFieldElementBox = document.getElementById('input_otp_box_field');
+    
+    if(inputFieldElementBox && systemPresetOtpTokenValue) {
+        inputFieldElementBox.value = systemPresetOtpTokenValue;
+        inputFieldElementBox.classList.add('is-valid');
+        
+        // 🎯 REASON: Diverts data flow safely into custom validation gateway layer instead of bypassing static dashboard link
+        setTimeout(function() {
+            evaluateUnifiedIdentityRoutingRulesLogicGate();
+        }, 800);
+    }
+}
+
+function monitorOtpLengthValidationStringMatches() {
+    const inputElementBox = document.getElementById('input_otp_box_field');
+    if(inputElementBox.value === "110176") {
+        inputElementBox.classList.add('is-valid');
+        setTimeout(function() {
+            evaluateUnifiedIdentityRoutingRulesLogicGate();
+        }, 600);
+    }
+}
+
+function finalizeFrontendPassengerSessionGateway(event) {
+    if (event) event.preventDefault();
+    const inputElementBox = document.getElementById('input_otp_box_field');
+    if(inputElementBox.value === "110176") {
+        evaluateUnifiedIdentityRoutingRulesLogicGate();
+    } else {
+        alert("Invalid Mockup Safety Access Authentication Code Matrix Token!");
+    }
+}
+
+// 🎯 THE ULTIMATE ROUTING GATE ACTION WORKFLOW
+function evaluateUnifiedIdentityRoutingRulesLogicGate() {
+    // Session token storage configuration mapped securely
+    sessionStorage.setItem('active_logged_in_customer_phone', globalCapturedMobileKey);
+    
+    // Check local database repository records
+    const registeredProfileCache = localStorage.getItem(`user_registry_db_${globalCapturedMobileKey}`);
+    
+    if (registeredProfileCache) {
+        // 🎯 Case 1: EXISTING NUMBER MATCHES
+        // Redirect straight into profile dashboard page to load live parameters instantly, then routes to dashboard hpage
+        alert("Authentication Success! Loading dynamic member credentials...");
+        window.location.href = "passenger_profile.html";
+    } else {
+        // 🎯 Case 2: NEW NUMBER DISCOVERY
+        // Redirect straight into dynamic passenger registration profiles layout to pull all details
+        window.location.href = "passenger_signup.html";
+    }
+}
+
+function executeFrontendOtpGenerationMatrix(event) {
+    event.preventDefault();
+    const typedMobile = document.getElementById('raw_mobile_input_node').value.trim();
+    if(typedMobile.length !== 10) return alert("Invalid phone!");
+
+    // Set central gate redirect configurations variables mapping
+    sessionStorage.setItem('active_logged_in_customer_phone', typedMobile);
+    sessionStorage.setItem('otp_gateway_intent_action', 'login');
+    window.location.href = "otp_gateway.html"; // Jump seamlessly
+}
+</script>
+</body>
+</html>

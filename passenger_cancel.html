@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajith Airways - Execute Reservation Cancellation</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; padding: 40px 0; }
+        .main-cancel-container { max-width: 850px; width: 95%; background: #ffffff; border-radius: 12px; box-shadow: 0 4px 25px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; margin: 0 auto; }
+        .cancel-secure-gateway-box { border: 2px solid #ff7979; border-radius: 16px; padding: 25px; background-color: #fffafb; max-width: 500px; margin: 20px auto 0 auto; }
+        .ticket-boarding-pass { background: linear-gradient(to right, #ffffff 72%, #fdfbf7 28%); border-radius: 20px; border: 2px dashed #b2bec3; box-shadow: 0 10px 25px rgba(0,0,0,0.05); overflow: hidden; display: flex; }
+        .ticket-header { background-color: #1e3c72; color: white; padding: 15px 25px; border-top-left-radius: 18px; border-top-right-radius: 18px; }
+        .ticket-left { width: 72%; border-right: 2px dashed #b2bec3; padding: 25px; }
+        .ticket-right { width: 28%; padding: 25px; background-color: #fffdf9; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .pnr-tag { font-size: 22px; font-weight: 800; color: #1e3c72; letter-spacing: 1px; font-family: monospace; }
+    </style>
+</head>
+<body>
+
+<div class="main-cancel-container p-4">
+    <div class="d-flex align-items-center justify-content-between mb-4 border-bottom pb-3">
+        <h4 class="fw-bold text-danger m-0"><i class="fas fa-window-close me-2"></i>Execute Reservation Cancellation Hub</h4>
+        <button onclick="abortCancellationFlow()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="fas fa-arrow-left me-1"></i> Return Back</button>
+    </div>
+
+    <!-- PNR INPUT AND LIST CONTAINER -->
+    <div class="card p-4 shadow-sm mb-4 border-0 rounded-4 bg-light">
+        <h5 class="fw-bold text-dark mb-2">Search or Select Active Ticket PNR Log</h5>
+        <div class="input-group mb-3">
+            <input type="text" id="c_status_pnr_input" class="form-control font-monospace fs-5 fw-bold text-uppercase" placeholder="Enter PNR Code e.g. AJI-XXXXXX">
+            <button class="btn btn-dark text-white fw-bold px-4" onclick="loadTargetTicketMetadataDetails()">Fetch Booking Data</button>
+        </div>
+        
+        <!-- 🎯 REASON: If context is dashboard general request, presents the logged in user's active history grid loop array maps directly -->
+        <div id="dashboard_direct_selection_block" class="d-none border-top pt-3 mt-2">
+            <small class="text-muted fw-bold text-uppercase d-block mb-2">Available Tickets under your Profile account registry:</small>
+            <div id="dynamic_selectable_tickets_basket" class="d-flex gap-2 flex-wrap"></div>
+        </div>
+    </div>
+
+    <!-- DYNAMIC BOARDING PASS CLEARANCE PORTAL DISPLAY -->
+    <div id="c_ticket_result_card_node" style="display:none;" class="border rounded shadow-lg overflow-hidden mb-4 bg-white">
+        <div class="ticket-header d-flex justify-content-between align-items-center">
+            <div class="fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS VERIFIED LOGS SYSTEM VALIDATED</div>
+            <div class="badge font-monospace fw-bold px-3 py-1 text-uppercase" id="c_st_status_badge">CONFIRMED TICKET</div>
+        </div>
+        
+        <div class="ticket-boarding-pass border-0 rounded-0 shadow-none">
+            <div class="ticket-left">
+                <div class="row g-4 text-start">
+                    <div class="col-6">
+                        <small class="text-muted text-uppercase font-monospace d-block small">Passenger Details Profile</small>
+                        <strong class="text-dark fs-5 d-block text-capitalize"><i class="fas fa-user me-2 text-primary"></i><span id="c_st_full_name">---</span></strong>
+                        <small class="text-secondary font-monospace tracking-wide d-block mt-1"><i class="fas fa-phone-alt me-2 text-muted"></i><span id="c_st_mobile">---</span></small>
+                    </div>
+                    <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Flight Number Identifier</small><strong class="text-primary fs-5"><i class="fas fa-plane me-2 text-secondary"></i><span id="c_st_flight_no">AJI-101</span></strong></div>
+                    <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Service Class Category</small><span class="badge bg-info text-capitalize px-3 py-2 fs-6 mt-1" id="c_st_class">Economy</span></div>
+                    <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Passenger Valid Identity (Aadhar ID)</small><strong class="text-secondary font-monospace tracking-wide fs-6"><i class="fas fa-id-card me-2 text-warning"></i>XXXX-XXXX-XXXX</strong></div>
+                    <div class="col-6"><small class="text-muted text-uppercase font-monospace d-block small">Total Seats Booked Count</small><strong class="text-dark fs-5"><i class="fas fa-chair me-2 text-warning"></i><span id="c_st_seats">1 Seat(s) Allocated</span></strong></div>
+                    <div class="col-12 border-top pt-3"><small class="text-muted text-uppercase font-monospace d-block small">Fare Remittance Invoice Paid</small><strong class="text-success fs-4">₹<span id="c_st_price">0.00</span> INR</strong></div>
+                </div>
+            </div>
+            
+            <div class="ticket-right">
+                <small class="text-muted text-uppercase font-monospace d-block mb-2 text-center fw-bold small">Scan Passage PNR</small>
+                <img src="" id="c_st_qr_code" class="img-fluid border p-2 bg-white shadow-sm rounded mb-2" style="min-height: 140px; min-width: 140px;" alt="PNR Verification QR">
+                <div class="text-center mt-1"><small class="text-secondary d-block font-monospace fs-7">UNIQUE PNR STRING</small><span class="pnr-tag font-monospace text-uppercase" id="c_st_pnr_string">AJI-XXXXXX</span></div>
+            </div>
+        </div>
+
+        <!-- REASON: Dynamic Security OTP System Engine Integrated inside layout structure container -->
+        <div class="bg-light p-4 border-top" id="c_st_cancellation_otp_action_row">
+            <div class="cancel-secure-gateway-box text-center">
+                <h5 class="fw-bold text-danger text-uppercase mb-2"><i class="fas fa-shield-alt me-2"></i>Cancellation Secure Gateway Verification</h5>
+                
+                <div class="alert alert-secondary border small text-center text-dark mb-3 p-2 font-monospace">
+                    Cancellation OTP Code: <b class="text-danger fs-5" id="simulation_cancel_otp_token">------</b>
+                    <button type="button" class="btn btn-sm btn-outline-success fw-bold d-block mx-auto mt-2 px-3 py-1" onclick="triggerClientSideAutofillCancelOtp()">
+                        <i class="fas fa-bolt me-1 text-warning"></i> Auto-Fill Cancellation OTP Code
+                    </button>
+                </div>
+
+                <form onsubmit="finalizeFrontendCancellationGateway(event)">
+                    <div class="mb-4">
+                        <label class="form-label small fw-bold text-secondary text-uppercase font-monospace tracking-wider">Enter OTP Authorization Code</label>
+                        <input type="text" id="input_cancel_otp_field" class="form-control text-center fs-3 fw-bold text-danger tracking-widest font-monospace" required placeholder="******" maxlength="6" autocomplete="off" oninput="monitorCancelOtpLengthValidationStringMatches()">
+                    </div>
+                    <button type="submit" class="btn btn-danger w-100 fw-bold py-3 fs-5 text-uppercase rounded-3 shadow"><i class="fas fa-trash-alt me-2"></i>Confirm Execute Reservation Cancellation</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let activeUserPhone = "";
+let generatedCancelOtp = "";
+
+document.addEventListener("DOMContentLoaded", function() {
+    activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone');
+    if (!activeUserPhone) {
+        activeUserPhone = "7790381462";
+        sessionStorage.setItem('active_logged_in_customer_phone', activeUserPhone);
+    }
+
+    // 🎯 REASON: If profile passed an implicit target check, fill input immediately!
+    const explicitlyPassedPnr = sessionStorage.getItem('otp_target_cancel_pnr');
+    
+    if (explicitlyPassedPnr) {
+        document.getElementById('c_status_pnr_input').value = explicitlyPassedPnr;
+        loadTargetTicketMetadataDetails();
+    } else {
+        // If coming directly from dashboard general cancel, scan profile database records automatically
+        document.getElementById('dashboard_direct_selection_block').classList.remove('d-none');
+        buildSelectableTicketBadgesMatrix();
+    }
+});
+
+function buildSelectableTicketBadgesMatrix() {
+    const basket = document.getElementById('dynamic_selectable_tickets_basket');
+    basket.innerHTML = "";
+    
+    const cachedTicketRaw = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
+    
+    if (cachedTicketRaw) {
+        const ticket = JSON.parse(cachedTicketRaw);
+        if (ticket.customer_id === activeUserPhone) {
+            const btn = document.createElement('button');
+            btn.className = `btn btn-sm font-monospace fw-bold ${ticket.ticket_status === 'confirmed' ? 'btn-outline-primary' : 'btn-outline-danger'}`;
+            btn.innerHTML = `<i class="fas fa-ticket-alt me-1"></i> ${ticket.pnr_no} [${ticket.ticket_status.toUpperCase()}]`;
+            btn.onclick = function() {
+                document.getElementById('c_status_pnr_input').value = ticket.pnr_no;
+                loadTargetTicketMetadataDetails();
+            };
+            basket.appendChild(btn);
+            return;
+        }
+    }
+    
+    basket.innerHTML = `<span class="text-muted font-monospace small"><i class="fas fa-folder-open me-1"></i> No active structural tickets bound to current profile.</span>`;
+}
+
+function loadTargetTicketMetadataDetails() {
+    const userInputPnr = document.getElementById('c_status_pnr_input').value.trim().toUpperCase();
+    const cachedTicketRaw = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
+    const displayCardNode = document.getElementById('c_ticket_result_card_node');
+
+    if (!cachedTicketRaw) {
+        alert("No historical booking records found!");
+        displayCardNode.style.display = 'none';
+        return;
+    }
+
+    const ticket = JSON.parse(cachedTicketRaw);
+
+    if (userInputPnr === ticket.pnr_no.toUpperCase()) {
+        document.getElementById('c_st_pnr_string').innerText = ticket.pnr_no;
+        document.getElementById('c_st_mobile').innerText = ticket.customer_id;
+        document.getElementById('c_st_flight_no').innerText = ticket.flight_no || "AJI-101";
+        document.getElementById('c_st_seats').innerText = ticket.no_of_seats + " Seat(s) Allocated";
+        document.getElementById('c_st_price').innerText = parseFloat(ticket.total_price).toFixed(2);
+        
+        let storedProfile = localStorage.getItem(`user_registry_db_${activeUserPhone}`);
+        document.getElementById('c_st_full_name').innerText = storedProfile ? JSON.parse(storedProfile).full_name : (ticket.passenger_name || "Veeramani M");
+        document.getElementById('c_st_class').innerText = ticket.class_type.replace('_', ' ');
+        document.getElementById('c_st_qr_code').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${ticket.pnr_no}`;
+
+        const badge = document.getElementById('c_st_status_badge');
+        const otpActionRow = document.getElementById('c_st_cancellation_otp_action_row');
+        
+        if(ticket.ticket_status === "cancelled") {
+            badge.className = "badge bg-danger text-white font-monospace fw-bold px-3 py-1 text-uppercase";
+            badge.innerText = "CANCELLED TICKET";
+            if(otpActionRow) otpActionRow.style.display = 'none';
+        } else {
+            badge.className = "badge bg-success text-white font-monospace fw-bold px-3 py-1 text-uppercase";
+            badge.innerText = "CONFIRMED TICKET";
+            if(otpActionRow) otpActionRow.style.display = 'block';
+            
+            // Generate unique random security string matrix token
+            generatedCancelOtp = Math.floor(100000 + Math.random() * 900000).toString();
+            document.getElementById('simulation_cancel_otp_token').innerText = generatedCancelOtp;
+            document.getElementById('input_cancel_otp_field').value = "";
+        }
+        displayCardNode.style.display = 'block';
+    } else {
+        alert("PNR Mismatch! No records active inside e-ledger storage index.");
+        displayCardNode.style.display = 'none';
+    }
+}
+
+function triggerClientSideAutofillCancelOtp() {
+    const inputField = document.getElementById('input_cancel_otp_field');
+    if(inputField) {
+        inputField.value = generatedCancelOtp;
+        inputField.classList.add('is-valid');
+        setTimeout(executeCoreCancellationMutationLogic, 600);
+    }
+}
+
+function monitorCancelOtpLengthValidationStringMatches() {
+    const inputField = document.getElementById('input_cancel_otp_field');
+    if(inputField.value === generatedCancelOtp) {
+        inputField.classList.add('is-valid');
+        setTimeout(executeCoreCancellationMutationLogic, 400);
+    }
+}
+
+function finalizeFrontendCancellationGateway(event) {
+    if (event) event.preventDefault();
+    if(document.getElementById('input_cancel_otp_field').value === generatedCancelOtp) {
+        executeCoreCancellationMutationLogic();
+    } else {
+        alert("Invalid Cancellation Authorization Code!");
+    }
+}
+
+function executeCoreCancellationMutationLogic() {
+    const cachedTicketRaw = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
+    
+    if (cachedTicketRaw) {
+        let ticket = JSON.parse(cachedTicketRaw);
+        ticket.ticket_status = "cancelled";
+        
+        localStorage.setItem(`active_ticket_receipt_${activeUserPhone}`, JSON.stringify(ticket));
+        localStorage.setItem('frontend_active_confirmed_ticket_receipt', JSON.stringify(ticket));
+        
+        let seatInventory = JSON.parse(localStorage.getItem('flight_766_inventory'));
+        if (seatInventory && ticket.class_type) {
+            seatInventory[ticket.class_type] = (seatInventory[ticket.class_type] || 0) + parseInt(ticket.no_of_seats || 1);
+            localStorage.setItem('flight_766_inventory', JSON.stringify(seatInventory));
+        }
+    }
+    
+    alert("Reservation Voided! Ticket Cancelled Securely.");
+    sessionStorage.removeItem('otp_target_cancel_pnr');
+    
+    // Auto re-route to dashboard/profile origin gracefully
+    const finalRoute = sessionStorage.getItem('otp_cancel_source_page') || "passenger_profile.html";
+    sessionStorage.removeItem('otp_cancel_source_page');
+    window.location.href = finalRoute;
+}
+
+// 🎯 REASON: Explicitly captures target PNR and loads the central cancellation module workspace page instantly
+function executePureFrontendCancellation(userPhone) {
+    let targetTicketReceipt = localStorage.getItem(`active_ticket_receipt_${userPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
+    
+    if (targetTicketReceipt) {
+        const ticket = JSON.parse(targetTicketReceipt);
+        
+        // Cache data attributes inside session vectors before executing path jumps
+        sessionStorage.setItem('otp_target_cancel_pnr', ticket.pnr_no);
+        sessionStorage.setItem('otp_cancel_source_page', 'passenger_profile.html');
+        
+        window.location.href = "passenger_cancel.html"; // Redirects to unified central file
+    }
+}
+</script>
+</body>
+</html>

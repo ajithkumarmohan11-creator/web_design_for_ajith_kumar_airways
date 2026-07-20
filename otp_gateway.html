@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajith Airways - Secure Auth Gateway Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); height: 100vh; display: flex; align-items: center; justify-content: center; font-family: 'Segoe UI', sans-serif; }
+        .gate-card { max-width: 450px; width: 90%; background: #ffffff; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.25); }
+    </style>
+</head>
+<body>
+<div class="gate-card p-4 text-center">
+    <div class="text-center mb-4">
+        <h4 class="fw-bold text-primary text-uppercase" id="gateway_title_label"><i class="fas fa-shield-alt me-2"></i>Security Gateway</h4>
+        <p class="text-muted small" id="gateway_desc_label">Verifying transaction integrity parameters</p>
+    </div>
+
+    <div class="alert alert-light border small text-center text-dark mb-4 p-3 font-monospace">
+        Your Secure OTP: <b class="text-danger fs-5" id="simulation_key_token">------</b> 
+        <button type="button" class="btn btn-sm btn-outline-success fw-bold d-block mx-auto mt-2 px-3 py-1" onclick="triggerClientSideAutofillOtpEnginePipeline()">
+            <i class="fas fa-bolt me-1"></i> Auto-Fill the OTP
+        </button>
+    </div>
+
+    <form onsubmit="finalizeFrontendPassengerSessionGateway(event)">
+        <div class="mb-4">
+            <label class="form-label small fw-bold text-secondary text-uppercase tracking-wider">Enter The 6 Digits OTP :</label>
+            <input type="text" id="input_otp_box_field" class="form-control text-center fs-3 fw-bold text-primary tracking-widest font-monospace" required placeholder="******" maxlength="6" autocomplete="off" oninput="monitorOtpLengthValidationStringMatches()">
+        </div>
+        <button type="submit" class="btn btn-success w-100 fw-bold py-2 fs-5">Verify OTP and Authorize</button>
+    </form>
+    
+    <div class="text-center mt-3">
+        <button onclick="abortGatewayFlow()" class="btn btn-link text-decoration-none small text-muted p-0"><i class="fas fa-times-circle me-1"></i> Abort Security Flow</button>
+    </div>
+</div>
+
+<script>
+let generatedOtpToken = "";
+let gatewayActionContext = "";
+let globalCapturedMobileKey = "";
+
+document.addEventListener("DOMContentLoaded", function() {
+    // 🎯 REASON: Extracts operation intent and phone matrices from storage session state safely
+    gatewayActionContext = sessionStorage.getItem('otp_gateway_intent_action') || "login";
+    globalCapturedMobileKey = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
+    
+    // Customize title display mapping based on active context routes
+    const titleNode = document.getElementById('gateway_title_label');
+    const descNode = document.getElementById('gateway_desc_label');
+    
+    if(gatewayActionContext === "login") {
+        titleNode.innerHTML = `<i class="fas fa-passport me-2 text-primary"></i>Passenger Login Auth`;
+        descNode.innerText = "Access account credentials validation layer";
+    } else if(gatewayActionContext === "payment") {
+        titleNode.innerHTML = `<i class="fas fa-wallet me-2 text-success"></i>Payment Clearance Auth`;
+        descNode.innerText = "Authorizing settlement invoice remittance";
+    } else if(gatewayActionContext === "cancel") {
+        titleNode.innerHTML = `<i class="fas fa-exclamation-triangle me-2 text-danger"></i>Cancellation Guard`;
+        descNode.innerText = "Voiding flight reservation ticket records";
+    }
+
+    // Dynamic clean generation sequence matrix
+    generatedOtpToken = Math.floor(100000 + Math.random() * 900000).toString();
+    document.getElementById('simulation_key_token').innerText = generatedOtpToken;
+});
+
+function triggerClientSideAutofillOtpEnginePipeline() {
+    const inputFieldElementBox = document.getElementById('input_otp_box_field');
+    if(inputFieldElementBox) {
+        inputFieldElementBox.value = generatedOtpToken;
+        inputFieldElementBox.classList.add('is-valid');
+        setTimeout(executeCoreRedirectionRouterGate, 600);
+    }
+}
+
+function monitorOtpLengthValidationStringMatches() {
+    const inputElementBox = document.getElementById('input_otp_box_field');
+    if(inputElementBox.value === generatedOtpToken) {
+        inputElementBox.classList.add('is-valid');
+        setTimeout(executeCoreRedirectionRouterGate, 400);
+    }
+}
+
+function finalizeFrontendPassengerSessionGateway(event) {
+    if (event) event.preventDefault();
+    if(document.getElementById('input_otp_box_field').value === generatedOtpToken) {
+        executeCoreRedirectionRouterGate();
+    } else {
+        alert("Invalid Security Authentication Token Matrix!");
+    }
+}
+
+function abortGatewayFlow() {
+    if(gatewayActionContext === "payment") window.location.href = "passenger_payment.html";
+    else if(gatewayActionContext === "cancel") window.location.href = "passenger_profile.html";
+    else window.location.href = "passenger_login.html";
+}
+
+// 🎯 THE CORE REDIRECTION ROUTER GATEWAY WORKFLOW (Handling all operations in one place)
+function executeCoreRedirectionRouterGate() {
+    sessionStorage.removeItem('otp_gateway_intent_action'); // Clear current state lock
+
+    // 🌟 OPERATION 1: LOGIN ROUTING SEQUENCE
+    if (gatewayActionContext === "login") {
+        const existingUser = localStorage.getItem(`user_registry_db_${globalCapturedMobileKey}`);
+        if (existingUser) {
+            window.location.href = "passenger_dashboard.html";
+        } else {
+            window.location.href = "passenger_signup.html";
+        }
+    } 
+    
+    // 🌟 OPERATION 2: PAYMENT BOOKING COMMIT SEQUENCE
+    else if (gatewayActionContext === "payment") {
+        const rawPayload = sessionStorage.getItem('pending_flight_booking_payload');
+        if (!rawPayload) {
+            window.location.href = "passenger_book.html";
+            return;
+        }
+        const bookingPayload = JSON.parse(rawPayload);
+        let seatInventory = JSON.parse(localStorage.getItem('flight_766_inventory'));
+        const targetClass = bookingPayload.class_type;
+        const requestedSeats = parseInt(bookingPayload.no_of_seats);
+
+        let currentProfileData = localStorage.getItem(`user_registry_db_${globalCapturedMobileKey}`);
+        let activePassengerName = "Veeramani M";
+        if(currentProfileData) {
+            activePassengerName = JSON.parse(currentProfileData).full_name;
+        }
+
+        const generatedPnr = "AJI-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        const mockTicket = {
+            pnr_no: generatedPnr,
+            customer_id: globalCapturedMobileKey,
+            passenger_name: activePassengerName,
+            flight_no: "AJI-101",
+            flight_id: bookingPayload.flight_id,
+            class_type: targetClass,
+            total_price: bookingPayload.total_price,
+            no_of_seats: requestedSeats,
+            ticket_status: "confirmed"
+        };
+
+        localStorage.setItem(`active_ticket_receipt_${globalCapturedMobileKey}`, JSON.stringify(mockTicket));
+        localStorage.setItem('frontend_active_confirmed_ticket_receipt', JSON.stringify(mockTicket));
+        
+        seatInventory[targetClass] = seatInventory[targetClass] - requestedSeats;
+        localStorage.setItem('flight_766_inventory', JSON.stringify(seatInventory));
+        sessionStorage.removeItem('pending_flight_booking_payload');
+
+        window.location.href = "ticket_receipt.html";
+    } 
+    
+    // 🌟 OPERATION 3: CANCELLATION MUTATION SEQUENCE
+    else if (gatewayActionContext === "cancel") {
+        const ticketReceipt = localStorage.getItem(`active_ticket_receipt_${globalCapturedMobileKey}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
+        if (ticketReceipt) {
+            let ticket = JSON.parse(ticketReceipt);
+            ticket.ticket_status = "cancelled";
+            localStorage.setItem(`active_ticket_receipt_${globalCapturedMobileKey}`, JSON.stringify(ticket));
+            localStorage.setItem('frontend_active_confirmed_ticket_receipt', JSON.stringify(ticket));
+            
+            let seatInventory = JSON.parse(localStorage.getItem('flight_766_inventory'));
+            if (seatInventory && ticket.class_type) {
+                seatInventory[ticket.class_type] = (seatInventory[ticket.class_type] || 0) + parseInt(ticket.no_of_seats);
+                localStorage.setItem('flight_766_inventory', JSON.stringify(seatInventory));
+            }
+        }
+        
+        // Return dynamically back to originating terminal screens safely
+        const sourceTerminal = sessionStorage.getItem('otp_cancel_source_page') || "passenger_profile.html";
+        sessionStorage.removeItem('otp_cancel_source_page');
+        window.location.href = sourceTerminal;
+    }
+}
+</script>
+</div>
+</body>
+</html>

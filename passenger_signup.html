@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Passenger Registration Profile Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+        .signup-card { max-width: 700px; width: 90%; background: #ffffff; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid #e0e0e0; }
+        .error-validation-msg { font-size: 12px; font-weight: bold; color: #dc3545; display: block; margin-top: 4px; }
+        .is-invalid { border-color: #dc3545 !important; background-image: none !important; }
+        .is-valid { border-color: #198754 !important; }
+    </style>
+</head>
+<body>
+<div class="signup-card p-4">
+    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-user-plus text-primary me-2"></i>Create Your Profile</h5>
+    
+    <div id="frontend_flash_msg" class="alert alert-danger text-center py-2 small mb-3 d-none"></div>
+
+    <form id="profile_registration_core_form" onsubmit="executePureFrontendSignup(event)" novalidate>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary">Verified Mobile Number (Primary Key / User ID) : </label>
+                <input type="text" id="signup_phone_node" class="form-control font-monospace fw-bold bg-light" readonly>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                    <span>Full Name (as per ID proof) :</span>
+                    <span id="err_name_node" class="error-validation-msg"></span>
+                </label>
+                <input type="text" id="signup_name_node" class="form-control fw-semibold" required placeholder="e.g. Ajithkumar M" oninput="validateLiveNameInput()">
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary">Select Your Gender :</label>
+                <select id="signup_gender_node" class="form-select fw-semibold" required>
+                    <option value="male" selected>Male</option>
+                    <option value="female">Female</option>
+                    <option value="others">Others</option>
+                </select>
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                    <span>Date of Birth (DOB):</span>
+                    <span id="err_dob_node" class="error-validation-msg"></span>
+                </label>
+                <input type="date" id="signup_dob_node" class="form-control" required onchange="validateLiveDobInput()">
+            </div>
+            
+            <div class="col-md-12">
+                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                    <span>Enter Your Email Address :</span>
+                    <span id="err_email_node" class="error-validation-msg"></span>
+                </label>
+                <input type="email" id="signup_email_node" class="form-control fw-semibold" required placeholder="name@example.com" oninput="validateLiveEmailInput()">
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                    <span>12 Digits ID Number :</span>
+                    <span id="signup_aadhar_error_node" class="error-validation-msg"></span>
+                </label>
+                <input type="text" id="signup_aadhar_input_field_node" class="form-control text-center font-monospace fs-5" required placeholder="XXXX-XXXX-XXXX" maxlength="14" oninput="applyDynamicSignupAadharHyphenCharacterFormattingMask(this)">
+            </div>
+            
+            <div class="col-md-6">
+                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                    <span>Emergency Contact :</span>
+                    <span id="err_emergency_node" class="error-validation-msg"></span>
+                </label>
+                <input type="text" id="signup_emergency_node" class="form-control font-monospace" required placeholder="Enter Trusted Mobile Number" oninput="validateLiveEmergencyInput()" maxlength="10">
+            </div>
+            
+            <div class="col-12 text-end mt-4 border-top pt-3">
+                <button type="submit" class="btn btn-primary px-5 fw-bold btn-lg">Create My Profile <i class="fas fa-check-circle ms-2"></i></button>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    let activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone');
+    if (!activeUserPhone) {
+        activeUserPhone = "9790381462";
+        sessionStorage.setItem('active_logged_in_customer_phone', activeUserPhone);
+    }
+    document.getElementById('signup_phone_node').value = activeUserPhone;
+});
+
+// 🎯 1. Live Name Validator
+function validateLiveNameInput() {
+    const nameField = document.getElementById('signup_name_node');
+    const errLabel = document.getElementById('err_name_node');
+    const val = nameField.value.trim();
+    
+    if (val.length === 0) {
+        errLabel.innerText = "× Name can't be empty";
+        nameField.classList.add('is-invalid');
+        nameField.classList.remove('is-valid');
+        return false;
+    } else if (val.length <= 1) {
+        errLabel.innerText = "× Can't be a single letter";
+        nameField.classList.add('is-invalid');
+        nameField.classList.remove('is-valid');
+        return false;
+    } else {
+        errLabel.innerText = "";
+        nameField.classList.remove('is-invalid');
+        nameField.classList.add('is-valid');
+        return true;
+    }
+}
+
+// 🎯 2. Live DOB Validator (Today Acceptance & Future Date Prevention Loop)
+function validateLiveDobInput() {
+    const dobField = document.getElementById('signup_dob_node');
+    const errLabel = document.getElementById('err_dob_node');
+    
+    if (!dobField.value) {
+        errLabel.innerText = "× DOB is required";
+        dobField.classList.add('is-invalid');
+        dobField.classList.remove('is-valid');
+        return false;
+    }
+    
+    const selectedDate = new Date(dobField.value);
+    const today = new Date();
+    
+    // Normalize hours to check only calendar dates cleanly without timezone glitches
+    selectedDate.setHours(0,0,0,0);
+    today.setHours(0,0,0,0);
+    
+    if (selectedDate > today) {
+        errLabel.innerText = "× DOB can't be in the future";
+        dobField.classList.add('is-invalid');
+        dobField.classList.remove('is-valid');
+        return false;
+    } else {
+        errLabel.innerText = "";
+        dobField.classList.remove('is-invalid');
+        dobField.classList.add('is-valid');
+        return true;
+    }
+}
+
+// 🎯 3. Live Email Validator
+function validateLiveEmailInput() {
+    const emailField = document.getElementById('signup_email_node');
+    const errLabel = document.getElementById('err_email_node');
+    const val = emailField.value.trim();
+    
+    // Strict Regex validation check for real email structure syntax
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+    
+    if (val.length === 0) {
+        errLabel.innerText = "× Email is required";
+        emailField.classList.add('is-invalid');
+        emailField.classList.remove('is-valid');
+        return false;
+    } else if (!emailPattern.test(val)) {
+        errLabel.innerText = "× Invalid Email Format";
+        emailField.classList.add('is-invalid');
+        emailField.classList.remove('is-valid');
+        return false;
+    } else {
+        errLabel.innerText = "";
+        emailField.classList.remove('is-invalid');
+        emailField.classList.add('is-valid');
+        return true;
+    }
+}
+
+// 🎯 4. Live Emergency Contact Validator
+function validateLiveEmergencyInput() {
+    const emergencyField = document.getElementById('signup_emergency_node');
+    const errLabel = document.getElementById('err_emergency_node');
+    const loginMobile = document.getElementById('signup_phone_node').value;
+    
+    emergencyField.value = emergencyField.value.replace(/\D/g, '');
+    const val = emergencyField.value;
+    
+    if (val.length === 0) {
+        errLabel.innerText = "× Contact number is required";
+        emergencyField.classList.add('is-invalid');
+        emergencyField.classList.remove('is-valid');
+        return false;
+    } else if (val.length !== 10) {
+        errLabel.innerText = "× Must be a 10-digit number";
+        emergencyField.classList.add('is-invalid');
+        emergencyField.classList.remove('is-valid');
+        return false;
+    } else if (val === loginMobile) {
+        errLabel.innerText = "× Can't be your own number";
+        emergencyField.classList.add('is-invalid');
+        emergencyField.classList.remove('is-valid');
+        return false;
+    } else {
+        errLabel.innerText = "";
+        emergencyField.classList.remove('is-invalid');
+        emergencyField.classList.add('is-valid');
+        return true;
+    }
+}
+
+// 🎯 5. Live ID Uniqueness Lookups
+function applyDynamicSignupAadharHyphenCharacterFormattingMask(elementHtmlInputNodeField) {
+    let optimizedRawNumericDigitsText = elementHtmlInputNodeField.value.replace(/\D/g, '');
+    let compiledFormattedMaskChunksList = [];
+    
+    for (let idx = 0; idx < optimizedRawNumericDigitsText.length; idx += 4) {
+        compiledFormattedMaskChunksList.push(optimizedRawNumericDigitsText.substring(idx, idx + 4));
+    }
+    elementHtmlInputNodeField.value = compiledFormattedMaskChunksList.join('-');
+    
+    const errLabel = document.getElementById('signup_aadhar_error_node');
+    
+    if (optimizedRawNumericDigitsText.length === 0) {
+        errLabel.innerText = "× ID Number is required";
+        elementHtmlInputNodeField.classList.add('is-invalid');
+        elementHtmlInputNodeField.classList.remove('is-valid');
+        return false;
+    } else if (optimizedRawNumericDigitsText.length < 12) {
+        errLabel.innerText = "× Need 12 digits";
+        elementHtmlInputNodeField.classList.add('is-invalid');
+        elementHtmlInputNodeField.classList.remove('is-valid');
+        return false;
+    }
+    
+    let isDuplicate = false;
+    for (let i = 0; i < localStorage.length; i++) {
+        const storageKey = localStorage.key(i);
+        if (storageKey.startsWith('user_registry_db_')) {
+            try {
+                const existingUserRecord = JSON.parse(localStorage.getItem(storageKey));
+                if (existingUserRecord && existingUserRecord.aadhar_number === optimizedRawNumericDigitsText) {
+                    isDuplicate = true;
+                    break;
+                }
+            } catch (e) { }
+        }
+    }
+    
+    if (isDuplicate) {
+        errLabel.innerText = "× Already Registered ID Number!";
+        elementHtmlInputNodeField.classList.add('is-invalid');
+        elementHtmlInputNodeField.classList.remove('is-valid');
+        return false;
+    } else {
+        errLabel.innerText = "";
+        elementHtmlInputNodeField.classList.remove('is-invalid');
+        elementHtmlInputNodeField.classList.add('is-valid');
+        return true;
+    }
+}
+
+function executePureFrontendSignup(event) {
+    event.preventDefault();
+    
+    const isNameValid = validateLiveNameInput();
+    const isDobValid = validateLiveDobInput();
+    const isEmailValid = validateLiveEmailInput();
+    const isEmergencyValid = validateLiveEmergencyInput();
+    const aadharInputField = document.getElementById('signup_aadhar_input_field_node');
+    const isAadharValid = applyDynamicSignupAadharHyphenCharacterFormattingMask(aadharInputField);
+    
+    if (!isNameValid || !isDobValid || !isEmailValid || !isEmergencyValid || !isAadharValid) {
+        document.getElementById('frontend_flash_msg').innerText = "Please correct the errors before creating your profile!";
+        document.getElementById('frontend_flash_msg').classList.remove('d-none');
+        return;
+    }
+    
+    const rawAadhar = aadharInputField.value.replace(/\D/g, '');
+    const mobileKey = document.getElementById('signup_phone_node').value;
+    
+    const userProfileObject = {
+        mobile_number: mobileKey,
+        full_name: document.getElementById('signup_name_node').value.trim(),
+        gender: document.getElementById('signup_gender_node').value,
+        date_of_birth: document.getElementById('signup_dob_node').value,
+        email_id: document.getElementById('signup_email_node').value.trim(),
+        aadhar_number: rawAadhar,
+        emergency_contact: document.getElementById('signup_emergency_node').value.trim()
+    };
+    
+    localStorage.setItem(`user_registry_db_${mobileKey}`, JSON.stringify(userProfileObject));
+    sessionStorage.setItem('active_logged_in_customer_phone', mobileKey);
+    
+    window.location.href = "passenger_profile.html";
+}
+</script>
+</body>
+</html>

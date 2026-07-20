@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Ajith Airways - Secure Payment Terminal</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+        .pass-nav { background-color: #1e3c72; color: white; padding: 15px 20px; }
+        .action-card { background: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-top: 40px; }
+        .payment-method-box { border: 2px solid #e2e8f0; border-radius: 10px; padding: 15px; cursor: pointer; transition: all 0.2s ease; }
+        .payment-method-box:hover { border-color: #1e3c72; background-color: #f8fafc; }
+        .payment-method-box.active { border-color: #1e3c72; background-color: #eff6ff; }
+        
+        /* 🎯 Dynamic Visualizer Styles */
+        .payment-visualizer-card { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 15px; width: 100%; max-width: 380px; height: 210px; color: white; padding: 20px; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.15); transition: all 0.3s ease; display: none; margin: 0 auto 20px auto; }
+        .debit-card-back { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); }
+        .card-chip { background: #e2e8f0; width: 45px; height: 35px; border-radius: 5px; margin-bottom: 20px; }
+        .card-magnetic-strip { background: #111; height: 40px; width: 100%; position: absolute; left: 0; top: 20px; }
+        .card-signature-pad { background: #fff; color: #000; height: 35px; width: 70%; display: inline-block; margin-top: 55px; font-family: monospace; padding: 5px; font-style: italic; }
+        .highlight-focus-border { border: 2px solid #ff9f43 !important; box-shadow: 0 0 12px #ff9f43; }
+        
+        /* Phone Layout for UPI Helper */
+        .upi-phone-visualizer { background: #000; color: #fff; border: 4px solid #333; }
+        .upi-app-icon-row i { margin: 0 10px; opacity: 0.8; }
+        
+        /* Passbook Layout for Bank Helper */
+        .bank-passbook-visualizer { background: linear-gradient(135deg, #27ae60 0%, #11998e 100%); }
+    </style>
+</head>
+<body>
+    <nav class="pass-nav d-flex justify-content-between align-items-center">
+        <h4 class="m-0 fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS - CHECKOUT TERMINAL</h4>
+        <button onclick="abortAndReturnToBookingWizard()" class="btn btn-sm btn-outline-light"><i class="fas fa-arrow-left me-1"></i> Cancel & Return</button>
+    </nav>
+
+    <div class="container mb-5">
+        <div class="row">
+            <div class="col-lg-7">
+                <div class="action-card p-4">
+                    <h5 class="fw-bold text-dark mb-1"><i class="fas fa-shield-alt text-primary me-2"></i>Secure Remittance Settlement Terminal</h5>
+                    <p class="text-muted small mb-4">Pure Frontend Sandbox Payment Gateway Layer</p>
+                    
+                    <div class="p-3 bg-light rounded border mb-4 d-flex justify-content-between align-items-center font-monospace">
+                        <span class="fw-bold text-secondary">AMOUNT DUE FOR CLEARANCE:</span>
+                        <strong class="text-primary fs-5">₹<span id="pmt_total_invoice_label">0.00</span> INR</strong>
+                    </div>
+
+                    <!-- Payment Method Selectors -->
+                    <div class="row g-3 mb-4">
+                        <div class="col-4">
+                            <div class="payment-method-box text-center active" id="chnl_card" onclick="switchActivePaymentChannelMode('card')">
+                                <i class="fas fa-credit-card fa-lg mb-2 text-primary"></i>
+                                <div class="fw-bold small">Card</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="payment-method-box text-center" id="chnl_upi" onclick="switchActivePaymentChannelMode('upi')">
+                                <i class="fab fa-google-pay fa-lg mb-2 text-success"></i>
+                                <div class="fw-bold small">UPI ID</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="payment-method-box text-center" id="chnl_netbank" onclick="switchActivePaymentChannelMode('netbank')">
+                                <i class="fas fa-university fa-lg mb-2 text-warning"></i>
+                                <div class="fw-bold small">NetBank</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <form id="active_payment_validator_execution_form" onsubmit="validateFormatAndExecuteFinalMockBooking(event)">
+                        
+                        <!-- CARD VIEW PANEL CONTROLS -->
+                        <div id="form_pane_card">
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Cardholder Name</label>
+                                    <input type="text" class="form-control" id="pmt_card_name" placeholder="e.g. AJITHKUMAR M" required onfocus="highlightVisualCardElement('name')" oninput="syncCardDataToVisualDisplay()">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                        <span>Card Number (Auto-Dash Format)</span>
+                                        <span id="err_card_no" class="text-danger small fw-bold"></span>
+                                    </label>
+                                    <input type="text" class="form-control font-monospace" id="pmt_card_no" maxlength="19" placeholder="XXXX-XXXX-XXXX-XXXX" required onfocus="highlightVisualCardElement('number')" oninput="validateCardNumberInputFormatOnTheSpot()">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                        <span>Expiry (MM/YY)</span>
+                                        <span id="err_card_exp" class="text-danger small fw-bold"></span>
+                                    </label>
+                                    <input type="text" class="form-control font-monospace text-center" id="pmt_card_exp" maxlength="5" placeholder="MM/YY" required onfocus="highlightVisualCardElement('expiry')" oninput="validateCardExpiryFormatOnTheSpot()">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                        <span>CVV</span>
+                                        <span id="err_card_cvv" class="text-danger small fw-bold"></span>
+                                    </label>
+                                    <input type="password" class="form-control font-monospace text-center" id="pmt_card_cvv" maxlength="3" placeholder="***" required onfocus="highlightVisualCardElement('cvv')" oninput="validateCardCvvFormatOnTheSpot()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- UPI ID VIEW PANEL CONTROLS -->
+                        <div id="form_pane_upi" style="display: none;">
+                            <div class="mb-4">
+                                <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                    <span>UPI Virtual ID String</span>
+                                    <span id="err_upi_id" class="text-danger small fw-bold"></span>
+                                </label>
+                                <!-- 🎯 REASON: Initial value placeholder masked out to xxxx formats for high user safety -->
+                                <input type="text" class="form-control font-monospace" id="pmt_upi_string" placeholder="xxxxxxxxxxxxxx@oksbi" onfocus="highlightVisualCardElement('upi')" oninput="validateUpiStringFormatOnTheSpot()">
+                            </div>
+                        </div>
+
+                        <!-- NETBANK VIEW PANEL CONTROLS -->
+                        <div id="form_pane_netbank" style="display: none;">
+                            <div class="row g-3 mb-4">
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary">Select Authorized Banking Institution Ledger</label>
+                                    <select class="form-select fw-semibold" id="pmt_bank_select">
+                                        <option value="SBI">State Bank of India (SBI)</option>
+                                        <option value="JIO">Jio Payments Bank Systems</option>
+                                        <option value="HDFC">HDFC Retail Banking Corporate</option>
+                                    </select>
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                        <span>NetBanking Customer / User ID</span>
+                                        <span id="err_net_user" class="text-danger small fw-bold"></span>
+                                    </label>
+                                    <input type="text" class="form-control font-monospace" id="pmt_net_user" placeholder="Enter NetBanking Username/ID" onfocus="highlightVisualCardElement('net_user')" oninput="validateNetBankingUserFormatOnTheSpot()">
+                                </div>
+                                <div class="col-12">
+                                    <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
+                                        <span>Secure Internet Banking Password</span>
+                                        <span id="err_net_pass" class="text-danger small fw-bold"></span>
+                                    </label>
+                                    <input type="password" class="form-control font-monospace" id="pmt_net_pass" placeholder="••••••••" onfocus="highlightVisualCardElement('net_pass')" oninput="validateNetBankingPasswordFormatOnTheSpot()">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="text-end border-top pt-3 mt-4">
+                            <button type="submit" id="pmt_settlement_submit_btn" class="btn btn-success px-5 fw-bold btn-lg w-100">Authorize Clearance Settlement <i class="fas fa-check-circle ms-2"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- RIGHT COLUMN: DYNAMIC LIVE VISUALIZER CONTAINER SYSTEM -->
+            <div class="col-lg-5 col-md-12 text-center d-flex flex-column align-items-center justify-content-start mt-4">
+                <div class="card p-3 shadow-sm w-100 border-0" id="card_guide_container" style="border-radius:16px; background:#fff; min-height: 480px;">
+                    <h6 class="fw-bold text-secondary text-start mb-3" id="visual_guide_title"><i class="fas fa-eye text-warning me-2"></i>Live Layout Guide Terminal</h6>
+                    
+                    <!-- CHANNEL 1: CARD VIEWS -->
+                    <div id="visual_pane_card" style="display: block;">
+                        <div class="payment-visualizer-card text-start mb-4" id="visual_card_front" style="display: block;">
+                            <div class="d-flex justify-content-between align-items-center mb-1">
+                                <span class="small fw-bold font-monospace text-uppercase" style="letter-spacing:1.5px;">DEBIT CARD</span>
+                                <i class="fab fa-cc-visa fa-2x"></i>
+                            </div>
+                            <div class="card-chip"></div>
+                            <div class="fs-4 font-monospace mb-3 w-100 tracking-widest text-center" id="v_number" style="letter-spacing:2.5px;">XXXX-XXXX-XXXX-XXXX</div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <small class="text-uppercase font-monospace d-block" style="font-size:8px; opacity:0.7;">Cardholder</small>
+                                    <span class="font-monospace text-uppercase text-truncate d-block" id="v_name" style="max-width:200px; font-size:14px;">AJITHKUMAR M</span>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-uppercase font-monospace d-block" style="font-size:8px; opacity:0.7;">Expires</small>
+                                    <span class="font-monospace" id="v_expiry" style="font-size:14px;">MM/YY</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="payment-visualizer-card debit-card-back text-start" id="visual_card_back" style="display: block;">
+                            <div class="card-magnetic-strip"></div>
+                            <div class="card-signature-pad text-end font-monospace">
+                                <span class="badge bg-danger fs-6 text-white px-2 py-1 me-1 font-monospace" id="v_cvv" style="border-radius:4px;">***</span>
+                            </div>
+                            <div class="mt-4 text-end pe-2"><small class="font-monospace text-white-50" style="font-size:10px;">Security CVV Code (Back Side Field)</small></div>
+                        </div>
+                    </div>
+
+                    <!-- CHANNEL 2: UPI APP HELPER VIEW (MOCKED GPAY MATCH) -->
+                    <div id="visual_pane_upi" style="display: none;">
+                        <div class="payment-visualizer-card upi-phone-visualizer text-start d-flex flex-column justify-content-between p-3" id="visual_upi_mock" style="display: flex;">
+                            <div class="d-flex justify-content-between border-bottom pb-1 mb-2 text-white-50 small font-monospace">
+                                <span><i class="fas fa-signal me-1"></i>Jio 5G</span>
+                                <span>14:19 <i class="fas fa-battery-three-quarters ms-1"></i></span>
+                            </div>
+                            <div class="text-center upi-app-icon-row my-2">
+                                <i class="fab fa-google-pay fa-2x text-info"></i>
+                                <span class="fw-bold font-monospace small align-middle text-warning text-capitalize" id="v_upi_profile_name">AjithKumar M</span>
+                            </div>
+                            <!-- 🎯 REASON: Highlights this block wrapper directly with an orange visual aura when user selects the text box -->
+                            <div class="bg-dark p-2 rounded text-center border border-secondary" id="v_upi_box">
+                                <small class="text-muted d-block font-monospace" style="font-size:9px;">GPAY PROFILE INTERFACE VIRTUAL ADDRESS ID</small>
+                                <strong class="font-monospace text-success fs-6" id="v_upi_label">xxxxxxxxxxxxxx@oksbi</strong>
+                            </div>
+                            <small class="text-white-50 text-center font-monospace d-block mt-2" style="font-size:9px; font-style: italic;">* Look into your GPay profile tab to enter the real ID string</small>
+                        </div>
+                    </div>
+
+                    <!-- CHANNEL 3: NETBANKING PASBOOK LEDGER -->
+                    <div id="visual_pane_netbank" style="display: none;">
+                        <div class="payment-visualizer-card bank-passbook-visualizer text-start d-flex flex-column justify-content-between p-3" id="visual_netbank_mock" style="display: flex;">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold font-monospace"><i class="fas fa-university me-2"></i>SECURE BANK E-LEDGER</span>
+                                <span class="badge bg-dark small font-monospace">SSL SECURED</span>
+                            </div>
+                            <div class="p-2 bg-white rounded text-dark border-start border-4 border-warning my-2">
+                                <small class="text-secondary d-block font-monospace" style="font-size:8px;">INTERNET BANKING ID</small>
+                                <strong class="font-monospace text-dark d-block text-truncate" id="v_net_user_label">USER ID REFERENCE</strong>
+                            </div>
+                            <div class="p-2 bg-white rounded text-dark border-start border-4 border-danger">
+                                <small class="text-secondary d-block font-monospace" style="font-size:8px;">AUTHENTICATION KEY SECURITY PASSPHRASE</small>
+                                <strong class="font-monospace text-muted d-block" id="v_net_pass_label">••••••••••••</strong>
+                            </div>
+                            <small class="text-white-50 small text-center mt-2 font-monospace" style="font-size:8px;">Authorized Sandbox Banking Verification Logs Matrix</small>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    let activePaymentChannel = "card";
+    let bookingPayload = null;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const rawPayload = sessionStorage.getItem('pending_flight_booking_payload');
+        if (!rawPayload) {
+            alert("No active transaction records found! Returning to booking workspace.");
+            window.location.href = "passenger_book.html";
+            return;
+        }
+        bookingPayload = JSON.parse(rawPayload);
+        document.getElementById('pmt_total_invoice_label').innerText = parseFloat(bookingPayload.total_price).toFixed(2);
+        
+        // 🎯 1. 100% PURE LIVE PROFILE NAME DATA SYNC
+        const livePassengerName = bookingPayload.passenger_name || "Ajithkumar M";
+        document.getElementById('pmt_card_name').value = livePassengerName.toUpperCase();
+        document.getElementById('v_upi_profile_name').innerText = livePassengerName;
+        
+        // 🎯 2. INITIAL MASKED xxxx FORMAT VALUE FOR USER VIEW SEGREGATION SAFETY
+        document.getElementById('pmt_upi_string').value = "xxxxxxxxxxxxxx@oksbi";
+        
+        switchActivePaymentChannelMode('card');
+        syncCardDataToVisualDisplay();
+    });
+
+    function abortAndReturnToBookingWizard() {
+        sessionStorage.removeItem('pending_flight_booking_payload');
+        window.location.href = "passenger_book.html";
+    }
+
+    function switchActivePaymentChannelMode(channelMode) {
+        activePaymentChannel = channelMode;
+        document.querySelectorAll('.payment-method-box').forEach(el => el.classList.remove('active'));
+        document.getElementById('chnl_' + channelMode).classList.add('active');
+
+        document.getElementById('form_pane_card').style.display = channelMode === 'card' ? 'block' : 'none';
+        document.getElementById('form_pane_upi').style.display = channelMode === 'upi' ? 'block' : 'none';
+        document.getElementById('form_pane_netbank').style.display = channelMode === 'netbank' ? 'block' : 'none';
+        
+        document.getElementById('visual_pane_card').style.display = channelMode === 'card' ? 'block' : 'none';
+        document.getElementById('visual_pane_upi').style.display = channelMode === 'upi' ? 'block' : 'none';
+        document.getElementById('visual_pane_netbank').style.display = channelMode === 'netbank' ? 'block' : 'none';
+
+        const titleLabel = document.getElementById('visual_guide_title');
+        if (channelMode === 'card') titleLabel.innerHTML = `<i class="fas fa-credit-card text-warning me-2"></i>Live Debit Card Helper Guide`;
+        if (channelMode === 'upi') titleLabel.innerHTML = `<i class="fab fa-google-pay text-success me-2"></i>Live Google Pay (@oksbi) Guide`;
+        if (channelMode === 'netbank') titleLabel.innerHTML = `<i class="fas fa-university text-info me-2"></i>Live Internet Banking Credentials Guide`;
+
+        document.getElementById('pmt_card_name').required = channelMode === 'card';
+        document.getElementById('pmt_card_no').required = channelMode === 'card';
+        document.getElementById('pmt_card_exp').required = channelMode === 'card';
+        document.getElementById('pmt_card_cvv').required = channelMode === 'card';
+        document.getElementById('pmt_upi_string').required = channelMode === 'upi';
+        
+        document.getElementById('pmt_net_user').required = channelMode === 'netbank';
+        document.getElementById('pmt_net_pass').required = channelMode === 'netbank';
+        
+        syncCardDataToVisualDisplay();
+    }
+
+    // 🎯 3. PROGRAMMATIC GLOW BORDER MATRIX REFLECTION ENGINE
+    function highlightVisualCardElement(focusedField) {
+        document.getElementById('v_number').classList.remove('highlight-focus-border');
+        document.getElementById('v_name').classList.remove('highlight-focus-border');
+        document.getElementById('v_expiry').classList.remove('highlight-focus-border');
+        document.getElementById('v_cvv').classList.remove('highlight-focus-border');
+        document.getElementById('v_upi_box').classList.remove('highlight-focus-border');
+        document.getElementById('v_net_user_label').parentElement.classList.remove('highlight-focus-border');
+        document.getElementById('v_net_pass_label').parentElement.classList.remove('highlight-focus-border');
+
+        if(focusedField === 'number') document.getElementById('v_number').classList.add('highlight-focus-border');
+        if(focusedField === 'name') document.getElementById('v_name').classList.add('highlight-focus-border');
+        if(focusedField === 'expiry') document.getElementById('v_expiry').classList.add('highlight-focus-border');
+        if(focusedField === 'cvv') document.getElementById('v_cvv').classList.add('highlight-focus-border');
+        
+        // 🎯 REASON: Flashes orange aura outline around mock mobile card field block when user interacts with UPI box field!
+        if(focusedField === 'upi') document.getElementById('v_upi_box').classList.add('highlight-focus-border');
+        if(focusedField === 'net_user') document.getElementById('v_net_user_label').parentElement.classList.add('highlight-focus-border');
+        if(focusedField === 'net_pass') document.getElementById('v_net_pass_label').parentElement.classList.add('highlight-focus-border');
+    }
+
+    function syncCardDataToVisualDisplay() {
+        if (activePaymentChannel === 'card') {
+            const rawNum = document.getElementById('pmt_card_no').value || "XXXX-XXXX-XXXX-XXXX";
+            const rawName = document.getElementById('pmt_card_name').value || (bookingPayload ? bookingPayload.passenger_name : "AJITHKUMAR M");
+            const rawExp = document.getElementById('pmt_card_exp').value || "MM/YY";
+            const rawCvv = document.getElementById('pmt_card_cvv').value || "***";
+
+            document.getElementById('v_number').innerText = rawNum;
+            document.getElementById('v_name').innerText = rawName.toUpperCase();
+            document.getElementById('v_expiry').innerText = rawExp;
+            document.getElementById('v_cvv').innerText = rawCvv;
+        } else if (activePaymentChannel === 'upi') {
+            const upiVal = document.getElementById('pmt_upi_string').value || "xxxxxxxxxxxxxx@oksbi";
+            document.getElementById('v_upi_label').innerText = upiVal;
+        } else if (activePaymentChannel === 'netbank') {
+            const userVal = document.getElementById('pmt_net_user').value || "ENTERED USER ID";
+            const passVal = document.getElementById('pmt_net_pass').value;
+            document.getElementById('v_net_user_label').innerText = userVal;
+            document.getElementById('v_net_pass_label').innerText = passVal.length > 0 ? "•".repeat(passVal.length) : "••••••••••••";
+        }
+    }
+
+    function validateCardNumberInputFormatOnTheSpot() {
+        const field = document.getElementById('pmt_card_no');
+        const errNode = document.getElementById('err_card_no');
+        let rawVal = field.value.replace(/\D/g, '');
+        let formattedVal = rawVal.match(/.{1,4}/g);
+        field.value = formattedVal ? formattedVal.join('-') : rawVal;
+
+        const cleanLen = field.value.replace(/-/g, '').length;
+        errNode.innerText = (cleanLen < 16 && cleanLen > 0) ? "× Need 16 digits" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateCardExpiryFormatOnTheSpot() {
+        const field = document.getElementById('pmt_card_exp');
+        const errNode = document.getElementById('err_card_exp');
+        let val = field.value.replace(/\D/g, '');
+        if (val.length >= 2) {
+            field.value = val.substring(0, 2) + '/' + val.substring(2, 4);
+        } else {
+            field.value = val;
+        }
+        errNode.innerText = (!/^(0[1-9]|1[0-2])\/([0-9]{2})$/.test(field.value) && field.value.length > 0) ? "× Format: MM/YY" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateCardCvvFormatOnTheSpot() {
+        const field = document.getElementById('pmt_card_cvv');
+        const errNode = document.getElementById('err_card_cvv');
+        field.value = field.value.replace(/\D/g, '');
+        errNode.innerText = (field.value.length < 3 && field.value.length > 0) ? "× Need 3 digits" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateUpiStringFormatOnTheSpot() {
+        const field = document.getElementById('pmt_upi_string');
+        const errNode = document.getElementById('err_upi_id');
+        errNode.innerText = (!field.value.includes('@') && field.value.length > 0) ? "× Invalid Address (@ missing)" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateNetBankingUserFormatOnTheSpot() {
+        const field = document.getElementById('pmt_net_user');
+        const errNode = document.getElementById('err_net_user');
+        errNode.innerText = (field.value.trim().length < 4 && field.value.length > 0) ? "× User ID must be min 4 chars" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateNetBankingPasswordFormatOnTheSpot() {
+        const field = document.getElementById('pmt_net_pass');
+        const errNode = document.getElementById('err_net_pass');
+        errNode.innerText = (field.value.length < 6 && field.value.length > 0) ? "× Password must be min 6 digits" : "";
+        syncCardDataToVisualDisplay();
+    }
+
+    function validateFormatAndExecuteFinalMockBooking(event) {
+        event.preventDefault();
+
+        if(activePaymentChannel === 'card') {
+            const cleanCardNo = document.getElementById('pmt_card_no').value.replace(/-/g, '');
+            if(cleanCardNo.length !== 16 || document.getElementById('pmt_card_cvv').value.length !== 3) {
+                alert("Please correct card data fields syntax structures!");
+                return;
+            }
+        } else if(activePaymentChannel === 'upi') {
+            const upiStr = document.getElementById('pmt_upi_string').value.trim();
+            if(!upiStr.includes('@') || upiStr === "xxxxxxxxxxxxxx@oksbi") {
+                alert("Payment Form Validation Error: Please input your verified Google Pay string handle code!");
+                return;
+            }
+        } else if(activePaymentChannel === 'netbank') {
+            if(document.getElementById('pmt_net_user').value.trim().length < 4 || document.getElementById('pmt_net_pass').value.length < 6) {
+                alert("Payment Form Validation Error: Please input correct NetBanking User ID and Password fields configurations!");
+                return;
+            }
+        }
+
+        let seatInventory = JSON.parse(localStorage.getItem('flight_766_inventory'));
+        const targetClass = bookingPayload.class_type;
+        const requestedSeats = parseInt(bookingPayload.no_of_seats);
+
+        if (requestedSeats > seatInventory[targetClass]) {
+            alert("Deduction Core Interrupt Error: Seats sold out since transaction lock state sequence!");
+            abortAndReturnToBookingWizard();
+            return;
+        }
+
+        const generatedPnr = "AJI-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+        
+        const mockTicket = {
+            pnr_no: generatedPnr,
+            customer_id: bookingPayload.customer_id,
+            passenger_name: bookingPayload.passenger_name || "Ajithkumar M",
+            flight_no: "AJI-101",
+            flight_id: bookingPayload.flight_id,
+            class_type: targetClass,
+            total_price: bookingPayload.total_price,
+            no_of_seats: requestedSeats,
+            ticket_status: "confirmed"
+        };
+
+        localStorage.setItem('frontend_active_confirmed_ticket_receipt', JSON.stringify(mockTicket));
+        seatInventory[targetClass] = seatInventory[targetClass] - requestedSeats;
+        localStorage.setItem('flight_766_inventory', JSON.stringify(seatInventory));
+
+        sessionStorage.removeItem('pending_flight_booking_payload');
+
+        alert("Payment Settlement Verified! Ticket Generated Successfully.");
+        window.location.href = "ticket_receipt.html";
+    }
+
+    function validateFormatAndExecuteFinalMockBooking(event) {
+    event.preventDefault();
+    // After standard form parameters verification passes:
+    sessionStorage.setItem('otp_gateway_intent_action', 'payment');
+    window.location.href = "otp_gateway.html"; // Jump seamlessly
+}
+    </script>
+</body>
+</html>

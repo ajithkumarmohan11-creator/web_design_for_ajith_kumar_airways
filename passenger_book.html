@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><title>Ajith Airways - Seat Booking Wizard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background-color: #f1f4f9; font-family: 'Segoe UI', sans-serif; min-height: 100vh; }
+        .pass-nav { background-color: #1e3c72; color: white; padding: 15px 20px; }
+        .action-card { background: #ffffff; border-radius: 16px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); margin-top: 40px; }
+    </style>
+</head>
+<body>
+    <nav class="pass-nav d-flex justify-content-between align-items-center">
+        <h4 class="m-0 fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS</h4>
+        <a href="passenger_dashboard.html" class="btn btn-sm btn-outline-light"><i class="fas fa-arrow-left me-1"></i>Back To Dashboard</a>
+    </nav>
+
+    <div class="container d-flex justify-content-center align-items-center mb-5">
+        <div class="action-card w-100 p-4" style="max-width: 850px;">
+            <h5 class="fw-bold text-dark mb-3" id="booking_wizard_title"><i class="fas fa-ticket-alt text-success me-2"></i>Book Ticket</h5>
+            
+            <form id="frontend_booking_form" onsubmit="routeToSeparatePaymentGateway(event)">
+                <div class="row g-4">
+                    <div class="col-md-6"><label class="small fw-bold text-secondary">Flight ID</label><input type="number" id="wiz_flight_id" class="form-control" readonly value="766"></div>
+                    <div class="col-md-6"><label class="small fw-bold text-secondary">Passenger Mobile</label><input type="text" id="wiz_phone" class="form-control" readonly value="9790381462"></div>
+                    
+                    <div class="col-md-6">
+                        <label class="small fw-bold text-secondary">Class Selection Reference</label>
+                        <select id="client_class_dropdown" class="form-select fw-semibold" onchange="syncLiveSeatConstraintsAndCalculate()">
+                            <option value="economy" id="opt_economy" data-cost-index="1250">Economy Class - ₹1250</option>
+                            <option value="premium_economy" id="opt_premium" data-cost-index="1850">Premium Economy Class - ₹1850</option>
+                            <option value="business" id="opt_business" data-cost-index="3000">Business Class - ₹3000</option>
+                            <option value="first_class" id="opt_first" data-cost-index="5000">First Class - ₹5000</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6">
+                        <label class="small fw-bold text-secondary d-flex justify-content-between">
+                            <span>Required Seats</span> 
+                            <span id="live_seat_limit_label" class="text-danger fw-bold font-monospace"></span>
+                        </label>
+                        <input type="number" id="client_seats_count" class="form-control" value="1" min="1" oninput="validateLiveInputLimitAndCalculate()">
+                    </div>
+                    
+                    <div class="col-md-12 mt-4">
+                        <div class="p-3 bg-light rounded border border-warning d-flex justify-content-between align-items-center">
+                            <div><small class="text-secondary fw-bold text-uppercase d-block mb-1">Cost/seat</small><strong class="fs-5 text-dark">₹<span id="wizard_label_unit_fare">1250.00</span> INR</strong></div>
+                            <div class="text-end"><small class="text-secondary fw-bold text-uppercase d-block mb-1">Total Cost</small><strong class="fs-4 text-success">₹<span id="wizard_label_grand_total">1250.00</span> INR</strong></div>
+                        </div>
+                        <input type="hidden" id="wizard_hidden_grand_total_input" value="1250">
+                    </div>
+
+                    <div class="col-12 text-end border-top pt-3 mt-4">
+                        <button type="submit" id="submit_booking_btn" class="btn btn-primary px-5 fw-bold btn-lg">Proceed to Payment Gateway <i class="fas fa-arrow-right ms-2"></i></button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const fId = urlParams.get('prefill_flight_id');
+        if(fId) document.getElementById('wiz_flight_id').value = fId;
+        
+        const dropdown = document.getElementById('client_class_dropdown');
+        if(dropdown && urlParams.get('eco_p')) {
+            dropdown.options[0].setAttribute('data-cost-index', urlParams.get('eco_p'));
+            dropdown.options[0].innerText = "Economy Class - ₹" + urlParams.get('eco_p');
+            dropdown.options[1].setAttribute('data-cost-index', urlParams.get('prem_p') || 1850);
+            dropdown.options[1].innerText = "Premium Economy - ₹" + (urlParams.get('prem_p') || 1850);
+        }
+
+        let inventory = localStorage.getItem('flight_766_inventory');
+        if (!inventory) {
+            inventory = { economy: 40, premium_economy: 30, business: 20, first_class: 10 };
+            localStorage.setItem('flight_766_inventory', JSON.stringify(inventory));
+        } else {
+            inventory = JSON.parse(inventory);
+        }
+
+        let classes = ['economy', 'premium_economy', 'business', 'first_class'];
+        let optionIds = ['opt_economy', 'opt_premium', 'opt_business', 'opt_first'];
+        let allBooked = true;
+
+        classes.forEach((className, index) => {
+            let optEl = document.getElementById(optionIds[index]);
+            if (inventory[className] <= 0) {
+                optEl.disabled = true;
+                optEl.innerText += " [Fully Booked]";
+            } else {
+                optEl.disabled = false;
+                allBooked = false;
+            }
+        });
+
+        if (allBooked) {
+            document.getElementById('booking_wizard_title').innerHTML = `<i class="fas fa-ban text-danger me-2"></i>Flight Fully Booked`;
+            document.getElementById('client_seats_count').readOnly = true;
+            dropdown.disabled = true;
+            let submitBtn = document.getElementById('submit_booking_btn');
+            submitBtn.disabled = true;
+            submitBtn.className = "btn btn-secondary px-5 fw-bold btn-lg";
+            submitBtn.innerText = "Flight Fully Booked";
+        }
+        syncLiveSeatConstraintsAndCalculate();
+    });
+
+    function syncLiveSeatConstraintsAndCalculate() {
+        const dropdown = document.getElementById('client_class_dropdown');
+        if (dropdown.disabled) return;
+        const selectedClass = dropdown.value;
+        let seatInventory = JSON.parse(localStorage.getItem('flight_766_inventory'));
+        const maxAvailable = seatInventory[selectedClass];
+        const inputField = document.getElementById('client_seats_count');
+        
+        inputField.max = maxAvailable;
+        document.getElementById('live_seat_limit_label').innerText = `(Only ${maxAvailable} left)`;
+
+        if (parseInt(inputField.value) > maxAvailable) inputField.value = maxAvailable;
+        if (maxAvailable <= 0) inputField.value = 0;
+
+        executeClientSideGrandInvoiceLiveCalculationsMatrix();
+    }
+
+    function validateLiveInputLimitAndCalculate() {
+        const inputField = document.getElementById('client_seats_count');
+        const maxLimit = parseInt(inputField.max) || 0;
+        if (parseInt(inputField.value) > maxLimit) inputField.value = maxLimit;
+        executeClientSideGrandInvoiceLiveCalculationsMatrix();
+    }
+
+    function executeClientSideGrandInvoiceLiveCalculationsMatrix() {
+        const dropdown = document.getElementById('client_class_dropdown');
+        if (dropdown.disabled) return;
+        const costIndex = parseFloat(dropdown.options[dropdown.selectedIndex].getAttribute('data-cost-index')) || 1250;
+        const countMultiplier = parseInt(document.getElementById('client_seats_count').value) || 0;
+        const grandTotal = costIndex * countMultiplier;
+        
+        document.getElementById('wizard_label_unit_fare').innerText = costIndex.toFixed(2);
+        document.getElementById('wizard_label_grand_total').innerText = grandTotal.toFixed(2);
+        document.getElementById('wizard_hidden_grand_total_input').value = grandTotal;
+    }
+
+    // 🎯 REASON: Pushes temporary data parameters into sessionStorage and opens the new payment sheet file cleanly
+    function routeToSeparatePaymentGateway(event) {
+        event.preventDefault();
+        const bookedSeats = parseInt(document.getElementById('client_seats_count').value) || 0;
+        if (bookedSeats <= 0) {
+            alert("Please select at least 1 seat!");
+            return;
+        }
+
+        const pendingTransactionPayload = {
+            flight_id: document.getElementById('wiz_flight_id').value,
+            customer_id: document.getElementById('wiz_phone').value,
+            class_type: document.getElementById('client_class_dropdown').value,
+            no_of_seats: bookedSeats,
+            total_price: document.getElementById('wizard_hidden_grand_total_input').value
+        };
+
+        // Cache parameters temporarily for payment phase step verification 
+        sessionStorage.setItem('pending_flight_booking_payload', JSON.stringify(pendingTransactionPayload));
+        window.location.href = "passenger_payment.html"; // Jumps straight to isolated checkout gate
+    }
+    </script>
+</body>
+</html>
