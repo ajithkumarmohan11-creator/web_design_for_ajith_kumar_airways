@@ -13,7 +13,6 @@
         .payment-method-box:hover { border-color: #1e3c72; background-color: #f8fafc; }
         .payment-method-box.active { border-color: #1e3c72; background-color: #eff6ff; }
         
-        /* 🎯 Dynamic Visualizer Styles */
         .payment-visualizer-card { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); border-radius: 15px; width: 100%; max-width: 380px; height: 210px; color: white; padding: 20px; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.15); transition: all 0.3s ease; display: none; margin: 0 auto 20px auto; }
         .debit-card-back { background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%); }
         .card-chip { background: #e2e8f0; width: 45px; height: 35px; border-radius: 5px; margin-bottom: 20px; }
@@ -21,11 +20,9 @@
         .card-signature-pad { background: #fff; color: #000; height: 35px; width: 70%; display: inline-block; margin-top: 55px; font-family: monospace; padding: 5px; font-style: italic; }
         .highlight-focus-border { border: 2px solid #ff9f43 !important; box-shadow: 0 0 12px #ff9f43; }
         
-        /* Phone Layout for UPI Helper */
         .upi-phone-visualizer { background: #000; color: #fff; border: 4px solid #333; }
         .upi-app-icon-row i { margin: 0 10px; opacity: 0.8; }
         
-        /* Passbook Layout for Bank Helper */
         .bank-passbook-visualizer { background: linear-gradient(135deg, #27ae60 0%, #11998e 100%); }
     </style>
 </head>
@@ -47,7 +44,6 @@
                         <strong class="text-primary fs-5">₹<span id="pmt_total_invoice_label">0.00</span> INR</strong>
                     </div>
 
-                    <!-- Payment Method Selectors -->
                     <div class="row g-3 mb-4">
                         <div class="col-4">
                             <div class="payment-method-box text-center active" id="chnl_card" onclick="switchActivePaymentChannelMode('card')">
@@ -71,7 +67,6 @@
 
                     <form id="active_payment_validator_execution_form" onsubmit="validateFormatAndExecuteFinalMockBooking(event)">
                         
-                        <!-- CARD VIEW PANEL CONTROLS -->
                         <div id="form_pane_card">
                             <div class="row g-3 mb-4">
                                 <div class="col-12">
@@ -102,19 +97,16 @@
                             </div>
                         </div>
 
-                        <!-- UPI ID VIEW PANEL CONTROLS -->
                         <div id="form_pane_upi" style="display: none;">
                             <div class="mb-4">
                                 <label class="form-label small fw-bold text-secondary d-flex justify-content-between">
                                     <span>UPI Virtual ID String</span>
                                     <span id="err_upi_id" class="text-danger small fw-bold"></span>
                                 </label>
-                                <!-- 🎯 REASON: Initial value placeholder masked out to xxxx formats for high user safety -->
                                 <input type="text" class="form-control font-monospace" id="pmt_upi_string" placeholder="xxxxxxxxxxxxxx@oksbi" onfocus="highlightVisualCardElement('upi')" oninput="validateUpiStringFormatOnTheSpot()">
                             </div>
                         </div>
 
-                        <!-- NETBANK VIEW PANEL CONTROLS -->
                         <div id="form_pane_netbank" style="display: none;">
                             <div class="row g-3 mb-4">
                                 <div class="col-12">
@@ -149,12 +141,10 @@
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: DYNAMIC LIVE VISUALIZER CONTAINER SYSTEM -->
             <div class="col-lg-5 col-md-12 text-center d-flex flex-column align-items-center justify-content-start mt-4">
                 <div class="card p-3 shadow-sm w-100 border-0" id="card_guide_container" style="border-radius:16px; background:#fff; min-height: 480px;">
                     <h6 class="fw-bold text-secondary text-start mb-3" id="visual_guide_title"><i class="fas fa-eye text-warning me-2"></i>Live Layout Guide Terminal</h6>
                     
-                    <!-- CHANNEL 1: CARD VIEWS -->
                     <div id="visual_pane_card" style="display: block;">
                         <div class="payment-visualizer-card text-start mb-4" id="visual_card_front" style="display: block;">
                             <div class="d-flex justify-content-between align-items-center mb-1">
@@ -183,7 +173,6 @@
                         </div>
                     </div>
 
-                    <!-- CHANNEL 2: UPI APP HELPER VIEW (MOCKED GPAY MATCH) -->
                     <div id="visual_pane_upi" style="display: none;">
                         <div class="payment-visualizer-card upi-phone-visualizer text-start d-flex flex-column justify-content-between p-3" id="visual_upi_mock" style="display: flex;">
                             <div class="d-flex justify-content-between border-bottom pb-1 mb-2 text-white-50 small font-monospace">
@@ -194,7 +183,6 @@
                                 <i class="fab fa-google-pay fa-2x text-info"></i>
                                 <span class="fw-bold font-monospace small align-middle text-warning text-capitalize" id="v_upi_profile_name">AjithKumar M</span>
                             </div>
-                            <!-- 🎯 REASON: Highlights this block wrapper directly with an orange visual aura when user selects the text box -->
                             <div class="bg-dark p-2 rounded text-center border border-secondary" id="v_upi_box">
                                 <small class="text-muted d-block font-monospace" style="font-size:9px;">GPAY PROFILE INTERFACE VIRTUAL ADDRESS ID</small>
                                 <strong class="font-monospace text-success fs-6" id="v_upi_label">xxxxxxxxxxxxxx@oksbi</strong>
@@ -203,7 +191,6 @@
                         </div>
                     </div>
 
-                    <!-- CHANNEL 3: NETBANKING PASBOOK LEDGER -->
                     <div id="visual_pane_netbank" style="display: none;">
                         <div class="payment-visualizer-card bank-passbook-visualizer text-start d-flex flex-column justify-content-between p-3" id="visual_netbank_mock" style="display: flex;">
                             <div class="d-flex justify-content-between align-items-center">
@@ -241,12 +228,10 @@
         bookingPayload = JSON.parse(rawPayload);
         document.getElementById('pmt_total_invoice_label').innerText = parseFloat(bookingPayload.total_price).toFixed(2);
         
-        // 🎯 1. 100% PURE LIVE PROFILE NAME DATA SYNC
         const livePassengerName = bookingPayload.passenger_name || "Ajithkumar M";
         document.getElementById('pmt_card_name').value = livePassengerName.toUpperCase();
         document.getElementById('v_upi_profile_name').innerText = livePassengerName;
         
-        // 🎯 2. INITIAL MASKED xxxx FORMAT VALUE FOR USER VIEW SEGREGATION SAFETY
         document.getElementById('pmt_upi_string').value = "xxxxxxxxxxxxxx@oksbi";
         
         switchActivePaymentChannelMode('card');
@@ -288,7 +273,6 @@
         syncCardDataToVisualDisplay();
     }
 
-    // 🎯 3. PROGRAMMATIC GLOW BORDER MATRIX REFLECTION ENGINE
     function highlightVisualCardElement(focusedField) {
         document.getElementById('v_number').classList.remove('highlight-focus-border');
         document.getElementById('v_name').classList.remove('highlight-focus-border');
@@ -303,7 +287,6 @@
         if(focusedField === 'expiry') document.getElementById('v_expiry').classList.add('highlight-focus-border');
         if(focusedField === 'cvv') document.getElementById('v_cvv').classList.add('highlight-focus-border');
         
-        // 🎯 REASON: Flashes orange aura outline around mock mobile card field block when user interacts with UPI box field!
         if(focusedField === 'upi') document.getElementById('v_upi_box').classList.add('highlight-focus-border');
         if(focusedField === 'net_user') document.getElementById('v_net_user_label').parentElement.classList.add('highlight-focus-border');
         if(focusedField === 'net_pass') document.getElementById('v_net_pass_label').parentElement.classList.add('highlight-focus-border');
@@ -443,9 +426,8 @@
 
     function validateFormatAndExecuteFinalMockBooking(event) {
     event.preventDefault();
-    // After standard form parameters verification passes:
     sessionStorage.setItem('otp_gateway_intent_action', 'payment');
-    window.location.href = "otp_gateway.html"; // Jump seamlessly
+    window.location.href = "otp_gateway.html";
 }
     </script>
 </body>

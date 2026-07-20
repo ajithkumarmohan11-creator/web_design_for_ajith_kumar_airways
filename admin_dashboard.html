@@ -180,7 +180,6 @@ function toggleWorkspaceSection(targetBlockId) {
             if (id === targetBlockId) {
                 if (currentBoxElement.classList.contains('d-none')) {
                     currentBoxElement.classList.remove('d-none');
-                    // Force block property layouts definitions to guarantee visual rendering override
                     currentBoxElement.style.display = 'block'; 
                 } else {
                     currentBoxElement.classList.add('d-none');

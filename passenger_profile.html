@@ -25,7 +25,6 @@
 
     <div class="container mb-5">
         <div class="row g-4">
-            <!-- LEFT CARD: Dynamic User Details Profile Area -->
             <div class="col-lg-4">
                 <div class="profile-card p-4 text-center">
                     <div class="d-flex justify-content-center mb-3">
@@ -43,7 +42,6 @@
                         <div class="col-12"><b>Phone:</b> <span class="text-secondary fw-semibold font-monospace" id="live_ui_phone">---</span></div>
                         <div class="col-12"><b>Email:</b> <span class="text-secondary small fw-semibold" id="live_ui_email">---</span></div>
                         
-                        <!-- 🎯 Dynamic Real-time Formatted Age Output Element -->
                         <div class="col-12"><b>Current Age:</b> <span class="badge bg-dark font-monospace fs-6" id="live_ui_calculated_age">Calculating...</span></div>
                         
                         <div class="col-12"><b>Gender Identity:</b> <span id="live_ui_gender_badge">---</span></div>
@@ -51,7 +49,6 @@
                 </div>
             </div>
 
-            <!-- RIGHT CARD: Dynamic Flight Reservation History Sheet -->
             <div class="col-lg-8">
                 <div class="profile-card p-4 h-100">
                     <h5 class="fw-bold text-dark border-bottom pb-2 mb-3"><i class="fas fa-history text-warning me-2"></i>Flights Reservation & Transaction History: </h5>
@@ -68,7 +65,6 @@
                                 </tr>
                             </thead>
                             <tbody id="live_history_table_body">
-                                <!-- JS values rendered context streams loop -->
                             </tbody>
                         </table>
                     </div>
@@ -110,12 +106,10 @@
         document.getElementById('live_ui_phone').innerText = storedProfileData.mobile_number;
         document.getElementById('live_ui_email').innerText = storedProfileData.email_id;
         
-        // 🎯 REASON: Updated age calculation script with a strict "Born Today" configuration for 0-day states
         if (storedProfileData.date_of_birth) {
             const dob = new Date(storedProfileData.date_of_birth);
             const today = new Date();
             
-            // Normalize hours to prevent calendar day calculation offsets
             dob.setHours(0,0,0,0);
             today.setHours(0,0,0,0);
             
@@ -127,7 +121,6 @@
             if (totalDays < 0) {
                 displayAgeString = "Invalid DOB";
             } else if (totalDays === 0) {
-                // 🎯 REASON: Matches exactly 0 days to output "Born Today" string representation[cite: 9]
                 displayAgeString = "Born Today";
             } else if (totalDays < 30) {
                 displayAgeString = totalDays + (totalDays === 1 ? " Day Old" : " Days Old");
@@ -256,7 +249,6 @@
     }
  
     function executePureFrontendCancellation(userPhone) {
-    // Save target tracking settings and jump straight to passenger_cancel.html page
     sessionStorage.setItem('otp_cancel_source_page', 'passenger_profile.html');
     window.location.href = "passenger_cancel.html";
 }

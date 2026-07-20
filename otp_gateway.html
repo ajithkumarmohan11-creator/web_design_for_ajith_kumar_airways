@@ -43,11 +43,9 @@ let gatewayActionContext = "";
 let globalCapturedMobileKey = "";
 
 document.addEventListener("DOMContentLoaded", function() {
-    // 🎯 REASON: Extracts operation intent and phone matrices from storage session state safely
     gatewayActionContext = sessionStorage.getItem('otp_gateway_intent_action') || "login";
     globalCapturedMobileKey = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
     
-    // Customize title display mapping based on active context routes
     const titleNode = document.getElementById('gateway_title_label');
     const descNode = document.getElementById('gateway_desc_label');
     
@@ -62,7 +60,6 @@ document.addEventListener("DOMContentLoaded", function() {
         descNode.innerText = "Voiding flight reservation ticket records";
     }
 
-    // Dynamic clean generation sequence matrix
     generatedOtpToken = Math.floor(100000 + Math.random() * 900000).toString();
     document.getElementById('simulation_key_token').innerText = generatedOtpToken;
 });
@@ -99,11 +96,9 @@ function abortGatewayFlow() {
     else window.location.href = "passenger_login.html";
 }
 
-// 🎯 THE CORE REDIRECTION ROUTER GATEWAY WORKFLOW (Handling all operations in one place)
 function executeCoreRedirectionRouterGate() {
-    sessionStorage.removeItem('otp_gateway_intent_action'); // Clear current state lock
+    sessionStorage.removeItem('otp_gateway_intent_action');
 
-    // 🌟 OPERATION 1: LOGIN ROUTING SEQUENCE
     if (gatewayActionContext === "login") {
         const existingUser = localStorage.getItem(`user_registry_db_${globalCapturedMobileKey}`);
         if (existingUser) {
@@ -113,7 +108,6 @@ function executeCoreRedirectionRouterGate() {
         }
     } 
     
-    // 🌟 OPERATION 2: PAYMENT BOOKING COMMIT SEQUENCE
     else if (gatewayActionContext === "payment") {
         const rawPayload = sessionStorage.getItem('pending_flight_booking_payload');
         if (!rawPayload) {
@@ -154,7 +148,6 @@ function executeCoreRedirectionRouterGate() {
         window.location.href = "ticket_receipt.html";
     } 
     
-    // 🌟 OPERATION 3: CANCELLATION MUTATION SEQUENCE
     else if (gatewayActionContext === "cancel") {
         const ticketReceipt = localStorage.getItem(`active_ticket_receipt_${globalCapturedMobileKey}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
         if (ticketReceipt) {
@@ -170,7 +163,6 @@ function executeCoreRedirectionRouterGate() {
             }
         }
         
-        // Return dynamically back to originating terminal screens safely
         const sourceTerminal = sessionStorage.getItem('otp_cancel_source_page') || "passenger_profile.html";
         sessionStorage.removeItem('otp_cancel_source_page');
         window.location.href = sourceTerminal;

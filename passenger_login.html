@@ -21,7 +21,6 @@
         <div class="mb-4"><label class="form-label small fw-bold text-secondary">Enter Your Mobile Number : </label>
             <div class="input-group">
                 <span class="input-group-text bg-light"><i class="fas fa-phone-alt text-secondary"></i></span>
-                <!-- 🎯 REASON: Input box ID explicitly mapped to extract target primary keys seamlessly -->
                 <input type="text" id="raw_mobile_input_node" name="mobile_number" class="form-control font-monospace fw-bold fs-5" required placeholder="Enter 10-digit number..." maxlength="10" oninput="this.value = this.value.replace(/\D/g, '')">
             </div>
         </div>
@@ -63,7 +62,6 @@ function executeFrontendOtpGenerationMatrix(event) {
         return;
     }
     
-    // Cache the phone structure globally to inject inside session parameters later
     globalCapturedMobileKey = inputMobile;
     
     document.getElementById('login_mobile_step_block').style.display = 'none';
@@ -78,7 +76,6 @@ function triggerClientSideAutofillOtpEnginePipeline() {
         inputFieldElementBox.value = systemPresetOtpTokenValue;
         inputFieldElementBox.classList.add('is-valid');
         
-        // 🎯 REASON: Diverts data flow safely into custom validation gateway layer instead of bypassing static dashboard link
         setTimeout(function() {
             evaluateUnifiedIdentityRoutingRulesLogicGate();
         }, 800);
@@ -105,22 +102,15 @@ function finalizeFrontendPassengerSessionGateway(event) {
     }
 }
 
-// 🎯 THE ULTIMATE ROUTING GATE ACTION WORKFLOW
 function evaluateUnifiedIdentityRoutingRulesLogicGate() {
-    // Session token storage configuration mapped securely
     sessionStorage.setItem('active_logged_in_customer_phone', globalCapturedMobileKey);
     
-    // Check local database repository records
     const registeredProfileCache = localStorage.getItem(`user_registry_db_${globalCapturedMobileKey}`);
     
     if (registeredProfileCache) {
-        // 🎯 Case 1: EXISTING NUMBER MATCHES
-        // Redirect straight into profile dashboard page to load live parameters instantly, then routes to dashboard hpage
         alert("Authentication Success! Loading dynamic member credentials...");
         window.location.href = "passenger_profile.html";
     } else {
-        // 🎯 Case 2: NEW NUMBER DISCOVERY
-        // Redirect straight into dynamic passenger registration profiles layout to pull all details
         window.location.href = "passenger_signup.html";
     }
 }
@@ -130,10 +120,9 @@ function executeFrontendOtpGenerationMatrix(event) {
     const typedMobile = document.getElementById('raw_mobile_input_node').value.trim();
     if(typedMobile.length !== 10) return alert("Invalid phone!");
 
-    // Set central gate redirect configurations variables mapping
     sessionStorage.setItem('active_logged_in_customer_phone', typedMobile);
     sessionStorage.setItem('otp_gateway_intent_action', 'login');
-    window.location.href = "otp_gateway.html"; // Jump seamlessly
+    window.location.href = "otp_gateway.html";
 }
 </script>
 </body>

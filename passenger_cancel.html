@@ -24,7 +24,6 @@
         <button onclick="abortCancellationFlow()" class="btn btn-sm btn-outline-secondary fw-bold"><i class="fas fa-arrow-left me-1"></i> Return Back</button>
     </div>
 
-    <!-- PNR INPUT AND LIST CONTAINER -->
     <div class="card p-4 shadow-sm mb-4 border-0 rounded-4 bg-light">
         <h5 class="fw-bold text-dark mb-2">Search or Select Active Ticket PNR Log</h5>
         <div class="input-group mb-3">
@@ -32,14 +31,12 @@
             <button class="btn btn-dark text-white fw-bold px-4" onclick="loadTargetTicketMetadataDetails()">Fetch Booking Data</button>
         </div>
         
-        <!-- 🎯 REASON: If context is dashboard general request, presents the logged in user's active history grid loop array maps directly -->
         <div id="dashboard_direct_selection_block" class="d-none border-top pt-3 mt-2">
             <small class="text-muted fw-bold text-uppercase d-block mb-2">Available Tickets under your Profile account registry:</small>
             <div id="dynamic_selectable_tickets_basket" class="d-flex gap-2 flex-wrap"></div>
         </div>
     </div>
 
-    <!-- DYNAMIC BOARDING PASS CLEARANCE PORTAL DISPLAY -->
     <div id="c_ticket_result_card_node" style="display:none;" class="border rounded shadow-lg overflow-hidden mb-4 bg-white">
         <div class="ticket-header d-flex justify-content-between align-items-center">
             <div class="fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS VERIFIED LOGS SYSTEM VALIDATED</div>
@@ -69,7 +66,6 @@
             </div>
         </div>
 
-        <!-- REASON: Dynamic Security OTP System Engine Integrated inside layout structure container -->
         <div class="bg-light p-4 border-top" id="c_st_cancellation_otp_action_row">
             <div class="cancel-secure-gateway-box text-center">
                 <h5 class="fw-bold text-danger text-uppercase mb-2"><i class="fas fa-shield-alt me-2"></i>Cancellation Secure Gateway Verification</h5>
@@ -104,14 +100,12 @@ document.addEventListener("DOMContentLoaded", function() {
         sessionStorage.setItem('active_logged_in_customer_phone', activeUserPhone);
     }
 
-    // 🎯 REASON: If profile passed an implicit target check, fill input immediately!
     const explicitlyPassedPnr = sessionStorage.getItem('otp_target_cancel_pnr');
     
     if (explicitlyPassedPnr) {
         document.getElementById('c_status_pnr_input').value = explicitlyPassedPnr;
         loadTargetTicketMetadataDetails();
     } else {
-        // If coming directly from dashboard general cancel, scan profile database records automatically
         document.getElementById('dashboard_direct_selection_block').classList.remove('d-none');
         buildSelectableTicketBadgesMatrix();
     }
@@ -178,7 +172,6 @@ function loadTargetTicketMetadataDetails() {
             badge.innerText = "CONFIRMED TICKET";
             if(otpActionRow) otpActionRow.style.display = 'block';
             
-            // Generate unique random security string matrix token
             generatedCancelOtp = Math.floor(100000 + Math.random() * 900000).toString();
             document.getElementById('simulation_cancel_otp_token').innerText = generatedCancelOtp;
             document.getElementById('input_cancel_otp_field').value = "";
@@ -236,24 +229,21 @@ function executeCoreCancellationMutationLogic() {
     alert("Reservation Voided! Ticket Cancelled Securely.");
     sessionStorage.removeItem('otp_target_cancel_pnr');
     
-    // Auto re-route to dashboard/profile origin gracefully
     const finalRoute = sessionStorage.getItem('otp_cancel_source_page') || "passenger_profile.html";
     sessionStorage.removeItem('otp_cancel_source_page');
     window.location.href = finalRoute;
 }
 
-// 🎯 REASON: Explicitly captures target PNR and loads the central cancellation module workspace page instantly
 function executePureFrontendCancellation(userPhone) {
     let targetTicketReceipt = localStorage.getItem(`active_ticket_receipt_${userPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
     
     if (targetTicketReceipt) {
         const ticket = JSON.parse(targetTicketReceipt);
         
-        // Cache data attributes inside session vectors before executing path jumps
         sessionStorage.setItem('otp_target_cancel_pnr', ticket.pnr_no);
         sessionStorage.setItem('otp_cancel_source_page', 'passenger_profile.html');
         
-        window.location.href = "passenger_cancel.html"; // Redirects to unified central file
+        window.location.href = "passenger_cancel.html"; 
     }
 }
 </script>

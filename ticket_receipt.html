@@ -104,7 +104,6 @@
     function renderBoardingPassFromStorage() {
         const activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
         
-        // 🎯 REASON: Grabs the live user ticket object token matching current context stream keys!
         const ticketRawData = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
         
         if (ticketRawData) {
@@ -116,7 +115,6 @@
             if(document.getElementById('rcpt_seats_count_node')) document.getElementById('rcpt_seats_count_node').innerText = ticket.no_of_seats + " Seat(s) Allocated";
             if(document.getElementById('rcpt_grand_price_node')) document.getElementById('rcpt_grand_price_node').innerText = parseFloat(ticket.total_price).toFixed(2);
             
-            // 🎯 REASON: Renders user profile full name instead of hardcoded strings
             let storedProfile = localStorage.getItem(`user_registry_db_${activeUserPhone}`);
             if(storedProfile) {
                 document.getElementById('rcpt_full_name_node').innerText = JSON.parse(storedProfile).full_name;
@@ -159,7 +157,6 @@
         if (confirm("Are you sure you want to cancel this reservation log immediately?")) {
             activeTicketObj.ticket_status = "cancelled";
             
-            // 🎯 REASON: Saves updated status into user-scoped local registries safely
             localStorage.setItem(`active_ticket_receipt_${activeUserPhone}`, JSON.stringify(activeTicketObj));
             localStorage.setItem('frontend_active_confirmed_ticket_receipt', JSON.stringify(activeTicketObj));
             

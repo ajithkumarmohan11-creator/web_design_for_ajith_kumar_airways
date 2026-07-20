@@ -104,7 +104,6 @@
             dateInputFieldNode.value = compiledTodayISOString;
         }
         
-        // Dynamic registry initialization verification framework rules
         let inventory = localStorage.getItem('flight_766_inventory');
         if (!inventory) {
             inventory = { economy: 40, premium_economy: 30, business: 20, first_class: 10 };

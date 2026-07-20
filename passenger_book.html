@@ -143,7 +143,6 @@
         document.getElementById('wizard_hidden_grand_total_input').value = grandTotal;
     }
 
-    // 🎯 REASON: Pushes temporary data parameters into sessionStorage and opens the new payment sheet file cleanly
     function routeToSeparatePaymentGateway(event) {
         event.preventDefault();
         const bookedSeats = parseInt(document.getElementById('client_seats_count').value) || 0;
@@ -160,9 +159,8 @@
             total_price: document.getElementById('wizard_hidden_grand_total_input').value
         };
 
-        // Cache parameters temporarily for payment phase step verification 
         sessionStorage.setItem('pending_flight_booking_payload', JSON.stringify(pendingTransactionPayload));
-        window.location.href = "passenger_payment.html"; // Jumps straight to isolated checkout gate
+        window.location.href = "passenger_payment.html"; 
     }
     </script>
 </body>

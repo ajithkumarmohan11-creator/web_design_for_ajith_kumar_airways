@@ -92,7 +92,6 @@ document.addEventListener("DOMContentLoaded", function() {
     document.getElementById('signup_phone_node').value = activeUserPhone;
 });
 
-// 🎯 1. Live Name Validator
 function validateLiveNameInput() {
     const nameField = document.getElementById('signup_name_node');
     const errLabel = document.getElementById('err_name_node');
@@ -116,7 +115,6 @@ function validateLiveNameInput() {
     }
 }
 
-// 🎯 2. Live DOB Validator (Today Acceptance & Future Date Prevention Loop)
 function validateLiveDobInput() {
     const dobField = document.getElementById('signup_dob_node');
     const errLabel = document.getElementById('err_dob_node');
@@ -131,7 +129,6 @@ function validateLiveDobInput() {
     const selectedDate = new Date(dobField.value);
     const today = new Date();
     
-    // Normalize hours to check only calendar dates cleanly without timezone glitches
     selectedDate.setHours(0,0,0,0);
     today.setHours(0,0,0,0);
     
@@ -148,13 +145,11 @@ function validateLiveDobInput() {
     }
 }
 
-// 🎯 3. Live Email Validator
 function validateLiveEmailInput() {
     const emailField = document.getElementById('signup_email_node');
     const errLabel = document.getElementById('err_email_node');
     const val = emailField.value.trim();
     
-    // Strict Regex validation check for real email structure syntax
     const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     
     if (val.length === 0) {
@@ -175,7 +170,6 @@ function validateLiveEmailInput() {
     }
 }
 
-// 🎯 4. Live Emergency Contact Validator
 function validateLiveEmergencyInput() {
     const emergencyField = document.getElementById('signup_emergency_node');
     const errLabel = document.getElementById('err_emergency_node');
@@ -207,7 +201,6 @@ function validateLiveEmergencyInput() {
     }
 }
 
-// 🎯 5. Live ID Uniqueness Lookups
 function applyDynamicSignupAadharHyphenCharacterFormattingMask(elementHtmlInputNodeField) {
     let optimizedRawNumericDigitsText = elementHtmlInputNodeField.value.replace(/\D/g, '');
     let compiledFormattedMaskChunksList = [];
@@ -215,7 +208,7 @@ function applyDynamicSignupAadharHyphenCharacterFormattingMask(elementHtmlInputN
     for (let idx = 0; idx < optimizedRawNumericDigitsText.length; idx += 4) {
         compiledFormattedMaskChunksList.push(optimizedRawNumericDigitsText.substring(idx, idx + 4));
     }
-    elementHtmlInputNodeField.value = compiledFormattedMaskChunksList.join('-');
+    elementHtmlInputNodeField.value = compiledFormattedMaskChunksList.join(' ');
     
     const errLabel = document.getElementById('signup_aadhar_error_node');
     

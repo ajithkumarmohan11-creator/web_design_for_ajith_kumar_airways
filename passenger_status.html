@@ -36,7 +36,6 @@
                     <button type="submit" class="btn btn-info text-white fw-bold w-100 py-2">Check Ticket Status</button>
                 </form>
 
-                <!-- Ticket Result Display Card Panel -->
                 <div id="status_ticket_result_card_node" style="display:none;" class="mt-5 border rounded shadow-lg overflow-hidden mb-4">
                     <div class="ticket-header d-flex justify-content-between align-items-center">
                         <div class="fw-bold"><i class="fas fa-plane-departure me-2"></i>AJITH AIRWAYS VERIFIED LOGS SYSTEM VALIDATED</div>
@@ -84,7 +83,6 @@
     </div>
 
     <script>
-    // Page load aagும்போது, ஆல்ரெடி புக் செஞ்ச டிக்கெட் இருந்தா பிஎன்ஆர்-ஐ ஆட்டோமேட்டிக்கா இன்புட் பாக்ஸ்ல போடும்
     document.addEventListener("DOMContentLoaded", function() {
         const activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
         const cachedTicketRaw = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
@@ -103,7 +101,6 @@
         const userInputPnr = document.getElementById('frontend_status_pnr_input').value.trim().toUpperCase();
         const activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
         
-        // 🎯 REASON: Pulls ticket mapped strictly under the current active user phone key instead of a static layout link
         const cachedTicketRaw = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
         const displayCardNode = document.getElementById('status_ticket_result_card_node');
 
@@ -122,7 +119,6 @@
             document.getElementById('st_seats').innerText = ticket.no_of_seats + " Seat(s) Allocated";
             document.getElementById('st_price').innerText = parseFloat(ticket.total_price).toFixed(2);
             
-            // 🎯 REASON: Fetches name directly from the user database registry for 100% accurate profile match
             let storedProfile = localStorage.getItem(`user_registry_db_${activeUserPhone}`);
             if(storedProfile) {
                 document.getElementById('st_full_name').innerText = JSON.parse(storedProfile).full_name;
@@ -152,7 +148,6 @@
         }
     }
 
-    // 🎯 REASON: Bypasses individual repetitive inline modals to target the exact unified reuse flow file
 function executeStatusPageInlineCancellation() {
     const activeUserPhone = sessionStorage.getItem('active_logged_in_customer_phone') || "7790381462";
     const ticketReceipt = localStorage.getItem(`active_ticket_receipt_${activeUserPhone}`) || localStorage.getItem('frontend_active_confirmed_ticket_receipt');
@@ -163,7 +158,7 @@ function executeStatusPageInlineCancellation() {
         sessionStorage.setItem('otp_target_cancel_pnr', ticket.pnr_no);
         sessionStorage.setItem('otp_cancel_source_page', 'passenger_status.html');
         
-        window.location.href = "passenger_cancel.html"; // Redirects to unified central file
+        window.location.href = "passenger_cancel.html"; 
     }
 }
     </script>
